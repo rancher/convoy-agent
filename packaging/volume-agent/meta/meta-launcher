@@ -1,0 +1,50 @@
+#!/bin/bash
+# This should run in a container that is privileged, and has --pid host and has docker sock bind mounted in
+
+set -e
+
+set -o verbose
+set -v
+set -x
+
+get_metadata() {
+	#echo $(curl -s http://rancher-metadata/latest/self/service/$1)
+	echo $1
+}
+
+MNT_PT="/var/lib/rancher/mounts"
+
+MNT_HOST=$(get_metadata host)
+MNT_PATH=$(get_metadata path)
+MNT_OPTS=$(get_metadata mount_opts)
+
+HOST_UUID=$(curl http://rancher-metadata/latest/self/host/uuid)
+
+MNT_HOST=104.196.7.61
+MNT_PATH=/gv2
+MNT_OPTS="-o vers=3"
+
+CATTLE_HOST=http://104.197.52.224:8080
+CATTLE_ACCESS_KEY=D761E100575F8FBC879C
+CATTLE_SECRET_KEY=5kBj77xVWoKWL27isFxPV19dT9PVN3Qth6s4erVs
+
+CONVOY_DIR=/var/run/convoy
+CONVOY_SOCK=$CONVOY_DIR/convoy.sock
+
+nsenter --target 1 --mount /bin/bash -c "\
+	apt-get install -y nfs-common && \
+	rpc.statd && \
+	rm -rf $CONVOY_DIR && \
+	mkdir -p $MNT_PT && \
+	mkdir -p $CONVOY_DIR && \
+	mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_PATH $MNT_PT && \
+	exec docker run \
+	-v $CONVOY_DIR:$CONVOY_DIR \
+	-v $MNT_PT:$MNT_PT \
+	-e CONVOY_SOCK=$CONVOY_SOCK \
+	-e MNT_PT=$MNT_PT \
+	-e HOST_UUID=$HOST_UUID \
+	-e CATTLE_URL=$CATTLE_HOST \
+	-e CATTLE_ACCESS_KEY=$CATTLE_ACCESS_KEY \
+	-e CATTLE_SECRET_KEY=$CATTLE_SECRET_KEY \
+	wlan0/convoy" 

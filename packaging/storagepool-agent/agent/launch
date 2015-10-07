@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+set -x
+set -v
+set -o verbose
+
+MNT_PT=$1
+
+if [ -z $MNT_PT ]; then
+	echo "MNT_PT env var is not set"
+	exit 1
+fi
+
+HEALTHCHECK_INTERVAL="5"
+HEALTHCHECK_BASEDIR="$MNT_PT/.healthcheck"
+
+STORAGEPOOL_DRIVER="convoy-nfs"
+STORAGEPOOL_ROOTDIR="$MNT_PT/.root"
+STORAGEPOOL_UUID=$(uuidgen)
+
+mkdir -p $STORAGEPOOL_ROOTDIR
+echo $STORAGEPOOL_UUID > $STORAGEPOOL_ROOTDIR/UUID
+
+mkdir -p $HEALTHCHECK_BASEDIR
+exec convoy-agent \
+	-d \
+	--url $CATTLE_URL \
+	--access-key $CATTLE_ACCESS_KEY \
+	--secret-key $CATTLE_SECRET_KEY \
+	--storagepool-rootdir $STORAGEPOOL_ROOTDIR \
+	--storagepool-driver $STORAGEPOOL_DRIVER \
+	--healthcheck-interval $HEALTHCHECK_INTERVAL \
+	--healthcheck-basedir $HEALTHCHECK_BASEDIR \
+	--storagepool-name $STORAGEPOOL_UUID \
+	storagepool \
+	--storagepool-uuid $STORAGEPOOL_UUID

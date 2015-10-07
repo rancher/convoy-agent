@@ -1,0 +1,9 @@
+convoy:
+  image: wlan0/meta-convoy
+  privileged: true
+  pid: host
+  net: host
+  labels:
+    io.rancher.scheduler.global: 'true'
+    io.rancher.scheduler.affinity:host_label: storage=nfs
+    io.rancher.container.dns: 'true'
