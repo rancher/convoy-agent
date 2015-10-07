@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+cd $(dirname $0)/..
+
+. ./scripts/common_functions
+
+set_project_vars
+
+nohup convoy daemon --drivers vfs --driver-opts vfs.path=$(pwd) & 
+
+mkdir -p tests/.healthcheck
+mkdir -p tests/.root
+
+echo '1234567890' > tests/.root/UUID
+
+go test -p 1 -timeout 99999s ./...
+
+result=$(find . -name "*.go" | grep -v ./Godeps | xargs gofmt -s -l)
+if [ -n "$result" ]; then
+    echo "${#result[@]} files failed gofmt check:"
+fi
+for i in $result; do
+    echo $i
+done
+
+[ -n "$result" ] && exit 1
+
+echo OK
