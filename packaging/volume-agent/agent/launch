@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# This should be called from a mount namespace that is the parent of all the mount namespaces where we are tracking mounts
+# i.e. This container should only be called from the meta container
+# The MNT_PT(mountpoint) environment variable should be set
+
+
+set -e
+set -x
+set -v
+set -o verbose
+
+if [ -z $MNT_PT ]; then
+	echo "MNT_PT env var is not set"
+	exit 1
+fi
+
+DEFAULT_CONVOY_SOCK=/var/run/convoy/convoy.sock
+
+get_convoy_sock() {
+	if [ -n $CONVOY_SOCK ]; then
+		echo $CONVOY_SOCK
+	else
+		echo $DEFAULT_CONVOY_SOCK
+	fi
+}
+
+HEALTHCHECK_INTERVAL="5"
+HEALTHCHECK_BASEDIR="$MNT_PT/.healthcheck"
+
+STORAGEPOOL_DRIVER="convoy-nfs"
+STORAGEPOOL_ROOTDIR="$MNT_PT/.root"
+
+convoy --socket $(get_convoy_sock) daemon --drivers vfs --driver-opts vfs.path=$MNT_PT &
+
+mkdir -p $HEALTHCHECK_BASEDIR
+exec convoy-agent \
+	-d \
+	--url $CATTLE_URL \
+	--access-key $CATTLE_ACCESS_KEY \
+	--secret-key $CATTLE_SECRET_KEY \
+	--storagepool-rootdir $STORAGEPOOL_ROOTDIR \
+	--storagepool-driver $STORAGEPOOL_DRIVER \
+	--healthcheck-interval $HEALTHCHECK_INTERVAL \
+	--healthcheck-basedir $HEALTHCHECK_BASEDIR \
+	volume \
+	--host-uuid $HOST_UUID

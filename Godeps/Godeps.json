@@ -1,0 +1,30 @@
+{
+	"ImportPath": "github.com/rancher/convoy-agent",
+	"GoVersion": "go1.4.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.6-1-g8bca266",
+			"Rev": "8bca2664072173a3c71db4c28ca8d304079b1787"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.2.0-137-gbca61c4",
+			"Rev": "bca61c476e3c752594983e4c9bcd5f62fb09f157"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "c66b764651cdca39f42d263b07a507c6e8b58ee9"
+		},
+		{
+			"ImportPath": "github.com/rancher/convoy/api",
+			"Comment": "v0.3-13-g8dd4ac0",
+			"Rev": "8dd4ac07e5a0c88fe4d3a725f964ed280c520462"
+		},
+		{
+			"ImportPath": "github.com/rancher/go-rancher/client",
+			"Comment": "v0.1.0-80-gf1d2f8c",
+			"Rev": "f1d2f8c7e015d477204b4201ccccbb67fe13ab84"
+		}
+	]
+}
