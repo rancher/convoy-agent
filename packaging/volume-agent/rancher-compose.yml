@@ -1,2 +1,5 @@
 convoy:
-  labels:
+  metadata:
+    mount_host: '104.196.7.61'
+    mount_path: 'gv3'
+    mount_opts: '-o vers=3'

@@ -1,7 +1,6 @@
 package volume
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -24,9 +23,23 @@ func writeHealthCheckFile(hostUuid, baseDir string, healthCheckInterval int, con
 			return
 		case <-time.After(5 * time.Second):
 		}
-		err := ioutil.WriteFile(filepath.Join(baseDir, hostUuid), []byte(time.Now().Format(time.RFC1123Z)), 0644)
+		f, err := os.OpenFile(filepath.Join(baseDir, hostUuid), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if err != nil {
-			log.Error("error writing healthcheck file err=[%v]", err)
+			log.Errorf("error opening file to write err=[%v]", err)
+			continue
 		}
+		_, err = f.Write([]byte(time.Now().Format(time.RFC1123Z)))
+		if err != nil {
+			log.Errorf("error writing healthcheck file err=[%v]", err)
+			f.Close()
+			continue
+		}
+		err = f.Sync()
+		if err != nil {
+			log.Errorf("error syncing file to filesystem err=[%v]", err)
+			f.Close()
+			continue
+		}
+		f.Close()
 	}
 }
