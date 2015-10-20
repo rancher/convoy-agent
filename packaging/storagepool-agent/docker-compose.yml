@@ -1,0 +1,9 @@
+storagepool:
+  image: wlan0/storagepool-agent
+  volumes:
+   - ${NFS_PATH}:${NFS_PATH}
+  environment:
+   - CATTLE_URL: ${CATTLE_URL}
+   - CATTLE_ACCESS_KEY: ${CATTLE_ACCESS_KEY}
+   - CATTLE_SECRET_KEY: ${CATTLE_SECRET_KEY}
+  command: ${NFS_PATH}

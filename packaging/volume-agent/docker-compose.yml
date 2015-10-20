@@ -5,5 +5,8 @@ convoy:
   net: host
   labels:
     io.rancher.scheduler.global: 'true'
-    io.rancher.scheduler.affinity:host_label: storage=nfs
     io.rancher.container.dns: 'true'
+  environment:
+   - CATTLE_URL=$CATTLE_URL
+   - CATTLE_ACCESS_KEY=$CATTLE_ACCESS_KEY
+   - CATTLE_SECRET_KEY=$CATTLE_SECRET_KEY

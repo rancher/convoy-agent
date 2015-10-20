@@ -3,48 +3,42 @@
 
 set -e
 
-set -o verbose
-set -v
-set -x
+MNT_BASE_PATH="/var/lib/rancher/mounts"
 
 get_metadata() {
-	#echo $(curl -s http://rancher-metadata/latest/self/service/$1)
-	echo $1
+	echo $(curl -s http://rancher-metadata/latest/services/convoy/metadata/$1)
 }
 
-MNT_PT="/var/lib/rancher/mounts"
-
-MNT_HOST=$(get_metadata host)
-MNT_PATH=$(get_metadata path)
+MNT_HOST=$(get_metadata mount_host)
+MNT_PATH=$(get_metadata mount_path)
 MNT_OPTS=$(get_metadata mount_opts)
 
-HOST_UUID=$(curl http://rancher-metadata/latest/self/host/uuid)
+MNT_PT=$MNT_BASE_PATH/$MNT_HOST/$MNT_PATH
 
-MNT_HOST=104.196.7.61
-MNT_PATH=/gv2
-MNT_OPTS="-o vers=3"
-
-CATTLE_HOST=http://104.197.52.224:8080
-CATTLE_ACCESS_KEY=D761E100575F8FBC879C
-CATTLE_SECRET_KEY=5kBj77xVWoKWL27isFxPV19dT9PVN3Qth6s4erVs
+HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
 
 CONVOY_DIR=/var/run/convoy
 CONVOY_SOCK=$CONVOY_DIR/convoy.sock
 
+DOCKER_PLUGIN_PATH=/etc/docker/plugins
+
 nsenter --target 1 --mount /bin/bash -c "\
 	apt-get install -y nfs-common && \
+	mkdir -p /etc/docker/plugins/ && \
 	rpc.statd && \
 	rm -rf $CONVOY_DIR && \
 	mkdir -p $MNT_PT && \
 	mkdir -p $CONVOY_DIR && \
-	mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_PATH $MNT_PT && \
-	exec docker run \
+	mountpoint -q $MNT_PT || mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_PATH $MNT_PT && \
+	docker run \
+	-v $DOCKER_PLUGIN_PATH:$DOCKER_PLUGIN_PATH \
 	-v $CONVOY_DIR:$CONVOY_DIR \
 	-v $MNT_PT:$MNT_PT \
 	-e CONVOY_SOCK=$CONVOY_SOCK \
 	-e MNT_PT=$MNT_PT \
 	-e HOST_UUID=$HOST_UUID \
-	-e CATTLE_URL=$CATTLE_HOST \
+	-e CATTLE_URL=$CATTLE_URL \
 	-e CATTLE_ACCESS_KEY=$CATTLE_ACCESS_KEY \
 	-e CATTLE_SECRET_KEY=$CATTLE_SECRET_KEY \
+	-l io.rancher.container.network=true \
 	wlan0/convoy" 
