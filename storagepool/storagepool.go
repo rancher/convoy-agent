@@ -15,6 +15,16 @@ var Commands = []cli.Command{
 				Name:  "storagepool-uuid",
 				Usage: "set the storage pool uuid",
 			},
+			cli.StringFlag{
+				Name:  "storagepool-healthcheck-type",
+				Usage: "set the healthcheck type [file | metadata]",
+				Value: "file",
+			},
+			cli.StringFlag{
+				Name:  "storagepool-metadata-url",
+				Usage: "set the metadata url",
+				Value: "http://rancher-metadata/07-25-2015",
+			},
 		},
 		Action:    storagepoolAgent,
 		ShortName: "sp",
@@ -24,6 +34,7 @@ var Commands = []cli.Command{
 func storagepoolAgent(c *cli.Context) {
 	healthCheckInterval := c.GlobalInt("healthcheck-interval")
 	healthCheckBaseDir := c.GlobalString("healthcheck-basedir")
+	healthCheckType := c.String("storagepool-healthcheck-type")
 	storagepoolUUID := c.String("storagepool-uuid")
 	if storagepoolUUID == "" {
 		log.Fatalf("Required field storagepool uuid [\"storagepool-uuid\"] is not set")
@@ -49,9 +60,11 @@ func storagepoolAgent(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, storagepoolUUID, healthCheckBaseDir, cattleClient)
+	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, storagepoolUUID, healthCheckBaseDir, healthCheckType, cattleClient)
 
-	if err := storagepoolAgent.Run(); err != nil {
+	metadataUrl := c.String("storagepool-metadata-url")
+
+	if err := storagepoolAgent.Run(metadataUrl); err != nil {
 		log.Fatal(err)
 	}
 }
