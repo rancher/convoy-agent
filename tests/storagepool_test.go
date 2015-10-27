@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	sphc = ".healthcheck2"
+	sphc       = ".healthcheck2"
+	hcFileType = "file"
 )
 
 func writeTestHostHealthcheckFile(filename string, controlChan chan bool) {
@@ -35,7 +36,6 @@ func writeTestHostHealthcheckFile(filename string, controlChan chan bool) {
 		case <-time.After(5 * time.Second):
 		}
 	}
-
 }
 
 func TestSyncInitialHostsInStoragePool(t *testing.T) {
@@ -47,8 +47,8 @@ func TestSyncInitialHostsInStoragePool(t *testing.T) {
 	tc := &testCattleClient{}
 
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, tc)
-		err := spAgent.Run()
+		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcFileType, tc)
+		err := spAgent.Run("")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}
@@ -90,8 +90,8 @@ func TestSyncLostHostDetectedInStoragePool(t *testing.T) {
 	tc := &testCattleClient{}
 
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, tc)
-		err := spAgent.Run()
+		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcFileType, tc)
+		err := spAgent.Run("")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}
@@ -150,8 +150,8 @@ func TestSyncNewHostDetectedInStoragePool(t *testing.T) {
 	tc := &testCattleClient{}
 
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, tc)
-		err := spAgent.Run()
+		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcFileType, tc)
+		err := spAgent.Run("")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}

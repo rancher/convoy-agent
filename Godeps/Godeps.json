@@ -22,6 +22,10 @@
 			"Rev": "8dd4ac07e5a0c88fe4d3a725f964ed280c520462"
 		},
 		{
+			"ImportPath": "github.com/rancher/go-rancher-metadata/metadata",
+			"Rev": "e57bb2cbdf6ce811818d1aeeae75f75d18a5182e"
+		},
+		{
 			"ImportPath": "github.com/rancher/go-rancher/client",
 			"Comment": "v0.1.0-80-gf1d2f8c",
 			"Rev": "f1d2f8c7e015d477204b4201ccccbb67fe13ab84"

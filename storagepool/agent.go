@@ -17,20 +17,22 @@ type StoragepoolAgent struct {
 	storagepoolRootDir  string
 	storagepoolUuid     string
 	healthCheckBaseDir  string
+	healthCheckType     string
 	cattleClient        cattle.CattleInterface
 }
 
-func NewStoragepoolAgent(healthCheckInterval int, storagepoolRootDir, storagepoolUuid, healthCheckBaseDir string, cattleClient cattle.CattleInterface) *StoragepoolAgent {
+func NewStoragepoolAgent(healthCheckInterval int, storagepoolRootDir, storagepoolUuid, healthCheckBaseDir, healthCheckType string, cattleClient cattle.CattleInterface) *StoragepoolAgent {
 	return &StoragepoolAgent{
 		healthCheckInterval: healthCheckInterval,
 		storagepoolRootDir:  storagepoolRootDir,
 		storagepoolUuid:     storagepoolUuid,
 		healthCheckBaseDir:  healthCheckBaseDir,
+		healthCheckType:     healthCheckType,
 		cattleClient:        cattleClient,
 	}
 }
 
-func (s *StoragepoolAgent) Run() error {
+func (s *StoragepoolAgent) Run(metadataUrl string) error {
 	if _, err := os.Stat(filepath.Join(s.storagepoolRootDir, rootUuidFileName)); os.IsNotExist(err) {
 		err := ioutil.WriteFile(filepath.Join(s.storagepoolRootDir, rootUuidFileName), []byte(s.storagepoolUuid), 0644)
 		if err != nil {
@@ -42,11 +44,17 @@ func (s *StoragepoolAgent) Run() error {
 	staleHosts := map[string]int{}
 	prevSent := map[string]bool{}
 
+	hc, err := newHealthChecker(s.healthCheckBaseDir, s.healthCheckType, metadataUrl)
+	if err != nil {
+		log.Errorf("Error initializing health checker, err = [%v]", err)
+		return err
+	}
+
 	for {
 		toDelete := []string{}
 		time.Sleep(time.Duration(s.healthCheckInterval) * time.Second)
 
-		currHosts, err := populateHostMap(s.healthCheckBaseDir)
+		currHosts, err := hc.populateHostMap()
 		if err != nil {
 			log.Error("Error while reading host info [%v]", err)
 			continue
@@ -94,7 +102,7 @@ func (s *StoragepoolAgent) Run() error {
 				continue
 			}
 			for _, uuid := range toDelete {
-				if err := deleteHost(uuid, s.healthCheckBaseDir); err != nil {
+				if err := hc.deleteHost(uuid); err != nil {
 					log.Error("error while deleting file [%v]", err)
 				}
 				delete(currHosts, uuid)
@@ -105,29 +113,4 @@ func (s *StoragepoolAgent) Run() error {
 		prevHosts = currHosts
 	}
 	return nil
-}
-
-func deleteHost(uuid, healthCheckBaseDir string) error {
-	return os.Remove(filepath.Join(healthCheckBaseDir, uuid))
-}
-
-func populateHostMap(healthCheckBaseDir string) (map[string]string, error) {
-	activeHosts := map[string]string{}
-	f, err := os.Open(healthCheckBaseDir)
-	if err != nil {
-		return nil, err
-	}
-	fi, err := f.Readdir(-1)
-	if err != nil {
-		return nil, err
-	}
-	for _, i := range fi {
-		stamp, err := ioutil.ReadFile(filepath.Join(healthCheckBaseDir, i.Name()))
-		if err != nil {
-			log.Errorf("Error reading file [%s] err [%v]", i.Name(), err)
-			continue
-		}
-		activeHosts[i.Name()] = string(stamp)
-	}
-	return activeHosts, nil
 }
