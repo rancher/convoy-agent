@@ -12,10 +12,6 @@ var Commands = []cli.Command{
 		Usage: "Start convoy-agent as a storagepool agent",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "storagepool-uuid",
-				Usage: "set the storage pool uuid",
-			},
-			cli.StringFlag{
 				Name:  "storagepool-healthcheck-type",
 				Usage: "set the healthcheck type [file | metadata]",
 				Value: "file",
@@ -23,7 +19,7 @@ var Commands = []cli.Command{
 			cli.StringFlag{
 				Name:  "storagepool-metadata-url",
 				Usage: "set the metadata url",
-				Value: "http://rancher-metadata/07-25-2015",
+				Value: "http://rancher-metadata/latest",
 			},
 		},
 		Action:    storagepoolAgent,
@@ -35,7 +31,7 @@ func storagepoolAgent(c *cli.Context) {
 	healthCheckInterval := c.GlobalInt("healthcheck-interval")
 	healthCheckBaseDir := c.GlobalString("healthcheck-basedir")
 	healthCheckType := c.String("storagepool-healthcheck-type")
-	storagepoolUUID := c.String("storagepool-uuid")
+	storagepoolUUID := c.GlobalString("storagepool-uuid")
 	if storagepoolUUID == "" {
 		log.Fatalf("Required field storagepool uuid [\"storagepool-uuid\"] is not set")
 	}

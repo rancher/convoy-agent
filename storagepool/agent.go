@@ -33,7 +33,7 @@ func NewStoragepoolAgent(healthCheckInterval int, storagepoolRootDir, storagepoo
 }
 
 func (s *StoragepoolAgent) Run(metadataUrl string) error {
-	if _, err := os.Stat(filepath.Join(s.storagepoolRootDir, rootUuidFileName)); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(s.storagepoolRootDir, rootUuidFileName)); os.IsNotExist(err) && s.healthCheckType != "metadata" {
 		err := ioutil.WriteFile(filepath.Join(s.storagepoolRootDir, rootUuidFileName), []byte(s.storagepoolUuid), 0644)
 		if err != nil {
 			return err
@@ -56,7 +56,7 @@ func (s *StoragepoolAgent) Run(metadataUrl string) error {
 
 		currHosts, err := hc.populateHostMap()
 		if err != nil {
-			log.Error("Error while reading host info [%v]", err)
+			log.Errorf("Error while reading host info [%v]", err)
 			continue
 		}
 
@@ -67,7 +67,7 @@ func (s *StoragepoolAgent) Run(metadataUrl string) error {
 				toSend[uuid] = true
 				continue
 			}
-			if prevStamp == stamp {
+			if s.healthCheckType != "metadata" && prevStamp == stamp {
 				//stalehost
 				staleHosts[uuid] = staleHosts[uuid] + 1
 				if staleHosts[uuid] >= 3 {

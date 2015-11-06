@@ -5,6 +5,8 @@ set -e
 
 MNT_BASE_PATH="/var/lib/rancher/mounts"
 
+SERVICE_NAME=$(curl -s http://rancher-metadata/latest/self/service)
+
 get_metadata() {
 	echo $(curl -s http://rancher-metadata/latest/services/convoy/metadata/$1)
 }
@@ -41,4 +43,5 @@ nsenter --target 1 --mount /bin/bash -c "\
 	-e CATTLE_ACCESS_KEY=$CATTLE_ACCESS_KEY \
 	-e CATTLE_SECRET_KEY=$CATTLE_SECRET_KEY \
 	-l io.rancher.container.network=true \
+	-l selector.convoy.nfs=true \
 	wlan0/convoy" 
