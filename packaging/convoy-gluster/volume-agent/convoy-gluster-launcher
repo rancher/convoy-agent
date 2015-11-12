@@ -1,0 +1,49 @@
+#!/bin/bash
+# make sure this container is started as privileged, and has the following volumes bind mounted in
+#	- /proc:/host/proc
+#       - /var/run/convoy:/var/run/convoy
+#       - /storage
+
+set -e
+
+CONVOY_SOCK=/var/run/convoy/convoy.sock
+
+STORAGEPOOL_DRIVER="convoy"
+
+sleep 30
+
+get_metadata() {
+	echo $(curl -s http://rancher-metadata/latest/services/convoy-gluster/metadata/$1)
+}
+
+
+STACK_NAME=$(get_metadata gluster_stack)
+SERVICE_NAME=$(get_metadata gluster_service)
+VOLUME_POOL=$(get_metadata volume_pool)
+
+HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
+
+nsenter --mount=/host/proc/1/ns/mnt /bin/bash -c "\
+	add-apt-repository ppa:gluster/glusterfs-3.7 && apt-get update && \
+	apt-get install -y --no-install-recommends \
+		openssh-server \
+		vim \
+		wget \
+		software-properties-common \
+		glusterfs-client"
+
+convoy --socket $CONVOY_SOCK daemon --mnt-ns /host/proc/1/ns/mnt \
+	--drivers glusterfs \
+       	--driver-opts glusterfs.rancherstack=$STACK_NAME \
+	--driver-opts glusterfs.rancherservice=$SERVICE_NAME \
+	--driver-opts glusterfs.defaultvolumepool=$VOLUME_POOL &
+echo "unix://$CONVOY_SOCK" > /etc/docker/plugins/convoy.spec
+
+exec convoy-agent \
+	--url $CATTLE_URL \
+	--access-key $CATTLE_ACCESS_KEY \
+	--secret-key $CATTLE_SECRET_KEY \
+	--storagepool-driver $STORAGEPOOL_DRIVER \
+	--storagepool-uuid $STACK_NAME \
+	volume \
+	--host-uuid $HOST_UUID

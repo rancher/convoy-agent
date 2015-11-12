@@ -1,0 +1,7 @@
+convoy:
+    metadata:
+        mount_host: "${MOUNT_HOST}"
+        mount_path: "${MOUNT_PATH}"
+        mount_opts: "${MOUNT_OPTS}"
+storagepool:
+     scale: 1

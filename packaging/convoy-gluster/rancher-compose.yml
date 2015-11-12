@@ -1,0 +1,7 @@
+convoy-gluster-volume:
+    metadata:
+        volume_pool: "${VOLUME_POOL}"
+        gluster_stack: "${GLUSTER_STACK}"
+        gluster_service: "${GLUSTER_SERVICE}"
+convoy-gluster-storagepool:
+    scale: 1

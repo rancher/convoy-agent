@@ -63,6 +63,10 @@ func main() {
 			Name:  "storagepool-name",
 			Usage: "set the storage pool name",
 		},
+		cli.StringFlag{
+			Name:  "storagepool-uuid",
+			Usage: "set the storage pool uuid",
+		},
 	}
 
 	commands := append(volume.Commands, storagepool.Commands...)

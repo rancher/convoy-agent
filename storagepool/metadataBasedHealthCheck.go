@@ -21,8 +21,6 @@ func (mt *metadataBasedHealthCheck) populateHostMap() (map[string]string, error)
 	}
 	if version == mt.version {
 		return mt.prevHosts, nil
-	} else {
-		mt.version = version
 	}
 
 	activeHosts := map[string]string{}
@@ -58,6 +56,7 @@ func (mt *metadataBasedHealthCheck) populateHostMap() (map[string]string, error)
 	if err != nil {
 		return nil, err
 	}
+
 	for _, container := range containers {
 		_, okc := possibleContainers[container.Name]
 		_, oks := possibleServices[container.ServiceName]
@@ -65,7 +64,9 @@ func (mt *metadataBasedHealthCheck) populateHostMap() (map[string]string, error)
 			activeHosts[container.HostUUID] = timeStamp
 		}
 	}
+
 	mt.prevHosts = activeHosts
+	mt.version = version
 	return activeHosts, nil
 }
 

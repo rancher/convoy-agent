@@ -3,6 +3,7 @@ package volume
 import (
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -47,9 +48,21 @@ func volumeAgent(c *cli.Context) {
 	controlChan := make(chan bool, 1)
 
 	storagepoolDir := c.GlobalString("storagepool-rootdir")
-	storagepoolUuid, err := ioutil.ReadFile(filepath.Join(storagepoolDir, rootUuidFileName))
-	if err != nil {
-		logrus.Fatalf("Error reading the storage pool uuid [%v]", err)
+
+	storagepoolUuid := c.GlobalString("storagepool-uuid")
+	var err error
+	for {
+		if storagepoolUuid != "" {
+			break
+		}
+		spUuid, err := ioutil.ReadFile(filepath.Join(storagepoolDir, rootUuidFileName))
+		if err != nil {
+			logrus.Errorf("Error reading the storage pool uuid [%v]", err)
+		} else {
+			storagepoolUuid = string(spUuid)
+			break
+		}
+		time.Sleep(5 * time.Second)
 	}
 
 	storagepoolName := c.GlobalString("storagepool-name")
@@ -68,7 +81,7 @@ func volumeAgent(c *cli.Context) {
 		logrus.Fatal(err)
 	}
 
-	volAgent := NewVolumeAgent(healthCheckBaseDir, socket, hostUuid, healthCheckInterval, cattleClient, string(storagepoolUuid))
+	volAgent := NewVolumeAgent(healthCheckBaseDir, socket, hostUuid, healthCheckInterval, cattleClient, storagepoolUuid)
 
 	if err := volAgent.Run(controlChan); err != nil {
 		logrus.Fatal(err)

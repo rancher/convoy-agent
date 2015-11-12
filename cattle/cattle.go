@@ -2,6 +2,7 @@ package cattle
 
 import (
 	"errors"
+	"fmt"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/rancher/convoy/api"
@@ -55,7 +56,7 @@ func (c *CattleClient) processVolume(event, storagepoolUuid string, vol api.Volu
 		Name:       vol.Name,
 		Driver:     c.driver,
 		DriverOpts: opts,
-		ExternalId: vol.Name,
+		ExternalId: fmt.Sprintf("%s://%s", c.driver, vol.Name),
 	}
 	return &client.ExternalVolumeEvent{
 		EventType:             event,
