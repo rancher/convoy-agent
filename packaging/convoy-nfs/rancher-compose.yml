@@ -3,5 +3,19 @@ convoy:
         mount_host: "${MOUNT_HOST}"
         mount_path: "${MOUNT_PATH}"
         mount_opts: "${MOUNT_OPTS}"
+    health_check:
+        request_line: GET /healthcheck HTTP/1.0
+        port: 10241
+        interval: 2000
+        response_timeout: 2000
+        unhealthy_threshold: 3
+        healthy_threshold: 2
 storagepool:
      scale: 1
+     health_check:
+        request_line: GET /healthcheck HTTP/1.0
+        port: 10241
+        interval: 2000
+        response_timeout: 2000
+        unhealthy_threshold: 3
+        healthy_threshold: 2
