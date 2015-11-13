@@ -27,8 +27,8 @@
 		},
 		{
 			"ImportPath": "github.com/rancher/go-rancher/client",
-			"Comment": "v0.1.0-80-gf1d2f8c",
-			"Rev": "f1d2f8c7e015d477204b4201ccccbb67fe13ab84"
+			"Comment": "v0.1.0-98-g595a411",
+			"Rev": "595a41161f4340fab2156d07507458f02b5c9a33"
 		},
 		{
 			"ImportPath": "github.com/rancher/kubernetes-agent/healthcheck",
