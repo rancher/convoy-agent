@@ -48,7 +48,7 @@ REPO=${REPO:=rancher}
 IMAGE_NAME=${IMAGE:-"rancher/convoy-agent"}:${TAG}
 
 echo "Building Docker image ${REPO}/volume-agent:${TAG}"
-docker build --rm -t ${REPO}/volume-agent:${TAG} dist/build/volume-agent
+docker build --rm -t ${REPO}/convoy-gluster-volume-agent:${TAG} dist/build/volume-agent
 
 echo "Building Docker image ${REPO}/storagepool-agent:${TAG}"
-docker build --rm -t ${REPO}/storagepool-agent:${TAG} dist/build/storagepool-agent
+docker build --rm -t ${REPO}/convoy-gluster-storagepool-agent:${TAG} dist/build/storagepool-agent
