@@ -6,6 +6,8 @@
 
 set -e
 
+sleep 30
+
 get_metadata() {
     echo $(curl -s http://rancher-metadata/latest/services/convoy-gluster/metadata/$1)
 }
@@ -16,8 +18,6 @@ SERVICE_NAME=$(get_metadata gluster_service)
 VOLUME_POOL=$(get_metadata volume_pool)
 
 CONVOY_SOCK=/var/run/convoy/$STACK_NAME.sock
-
-sleep 30
 
 HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
 
@@ -43,4 +43,5 @@ exec convoy-agent \
     --secret-key $CATTLE_SECRET_KEY \
     --storagepool-driver $STACK_NAME \
     volume \
+    --socket $CONVOY_SOCK \
     --host-uuid $HOST_UUID
