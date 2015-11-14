@@ -3,13 +3,16 @@ package main
 import (
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	"github.com/rancher/convoy-agent/storagepool"
 	"github.com/rancher/convoy-agent/volume"
+	"github.com/rancher/kubernetes-agent/healthcheck"
 )
 
 var (
 	GITCOMMIT = "HEAD"
+	port      = 10241
 )
 
 func main() {
@@ -72,6 +75,10 @@ func main() {
 	commands := append(volume.Commands, storagepool.Commands...)
 	app.Commands = commands
 
+	go func() {
+		err := healthcheck.StartHealthCheck(port)
+		log.Fatalf("Error while running healthcheck [%v]", err)
+	}()
 	app.EnableBashCompletion = true
 	app.Run(os.Args)
 }
