@@ -59,16 +59,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "storagepool-driver",
-			Usage: "set the storage pool driver",
-			Value: "convoy",
-		},
-		cli.StringFlag{
-			Name:  "storagepool-name",
-			Usage: "set the storage pool name",
-		},
-		cli.StringFlag{
-			Name:  "storagepool-uuid",
-			Usage: "set the storage pool uuid",
+			Usage: "set the storage pool driver.",
 		},
 	}
 

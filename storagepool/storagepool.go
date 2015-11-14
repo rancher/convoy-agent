@@ -31,12 +31,6 @@ func storagepoolAgent(c *cli.Context) {
 	healthCheckInterval := c.GlobalInt("healthcheck-interval")
 	healthCheckBaseDir := c.GlobalString("healthcheck-basedir")
 	healthCheckType := c.String("storagepool-healthcheck-type")
-	storagepoolUUID := c.GlobalString("storagepool-uuid")
-	if storagepoolUUID == "" {
-		log.Fatalf("Required field storagepool uuid [\"storagepool-uuid\"] is not set")
-	}
-
-	storagepoolRootDir := c.GlobalString("storagepool-rootdir")
 
 	cattleUrl := c.GlobalString("url")
 	cattleAccessKey := c.GlobalString("access-key")
@@ -45,18 +39,18 @@ func storagepoolAgent(c *cli.Context) {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	storagepoolDriver := c.GlobalString("storagepool-driver")
-	storagepoolName := c.GlobalString("storagepool-name")
-	if storagepoolName == "" {
-		log.Fatal("required field storagepool-name has not been set")
+	storagepoolRootDir := c.GlobalString("storagepool-rootdir")
+	driver := c.GlobalString("storagepool-driver")
+	if driver == "" {
+		log.Fatal("required field storagepool-driver has not been set")
 	}
 
-	cattleClient, err := cattle.NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey, storagepoolDriver, storagepoolName)
+	cattleClient, err := cattle.NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, storagepoolUUID, healthCheckBaseDir, healthCheckType, cattleClient)
+	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, driver, healthCheckBaseDir, healthCheckType, cattleClient)
 
 	metadataUrl := c.String("storagepool-metadata-url")
 

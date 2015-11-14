@@ -6,7 +6,6 @@ sleep 10
 
 HEALTHCHECK_TYPE="metadata"
 
-STORAGEPOOL_DRIVER="convoy-gluster"
 STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
 
 exec convoy-agent \
@@ -14,8 +13,6 @@ exec convoy-agent \
 	--url $CATTLE_URL \
 	--access-key $CATTLE_ACCESS_KEY \
 	--secret-key $CATTLE_SECRET_KEY \
-	--storagepool-uuid $STACK_NAME \
 	--storagepool-driver $STACK_NAME \
-	--storagepool-name $STACK_NAME \
 	storagepool \
 	--storagepool-healthcheck-type $HEALTHCHECK_TYPE

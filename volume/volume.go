@@ -1,12 +1,9 @@
 package volume
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"time"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+
 	"github.com/rancher/convoy-agent/cattle"
 )
 
@@ -47,27 +44,8 @@ func volumeAgent(c *cli.Context) {
 
 	controlChan := make(chan bool, 1)
 
-	storagepoolDir := c.GlobalString("storagepool-rootdir")
-
-	storagepoolUuid := c.GlobalString("storagepool-uuid")
-	var err error
-	for {
-		if storagepoolUuid != "" {
-			break
-		}
-		spUuid, err := ioutil.ReadFile(filepath.Join(storagepoolDir, rootUuidFileName))
-		if err != nil {
-			logrus.Errorf("Error reading the storage pool uuid [%v]", err)
-		} else {
-			storagepoolUuid = string(spUuid)
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
-
-	storagepoolName := c.GlobalString("storagepool-name")
-	storagepoolDriver := c.GlobalString("storagepool-driver")
-	if storagepoolDriver == "" {
+	driver := c.GlobalString("storagepool-driver")
+	if driver == "" {
 		logrus.Fatal("required field storagepool-driver has not been set")
 	}
 
@@ -76,12 +54,12 @@ func volumeAgent(c *cli.Context) {
 		logrus.Fatal("required field host-uuid has not been set")
 	}
 
-	cattleClient, err := cattle.NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey, storagepoolDriver, storagepoolName)
+	cattleClient, err := cattle.NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	volAgent := NewVolumeAgent(healthCheckBaseDir, socket, hostUuid, healthCheckInterval, cattleClient, storagepoolUuid)
+	volAgent := NewVolumeAgent(healthCheckBaseDir, socket, hostUuid, healthCheckInterval, cattleClient, driver)
 
 	if err := volAgent.Run(controlChan); err != nil {
 		logrus.Fatal(err)

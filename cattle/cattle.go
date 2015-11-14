@@ -2,7 +2,6 @@ package cattle
 
 import (
 	"errors"
-	"fmt"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/rancher/convoy/api"
@@ -16,12 +15,10 @@ type CattleInterface interface {
 }
 
 type CattleClient struct {
-	rancherClient   *client.RancherClient
-	driver          string
-	storagepoolName string
+	rancherClient *client.RancherClient
 }
 
-func NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey, spDriver, spName string) (*CattleClient, error) {
+func NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey string) (*CattleClient, error) {
 	if cattleUrl == "" {
 		return nil, errors.New("cattle url is empty")
 	}
@@ -37,52 +34,50 @@ func NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey, spDriver, spNa
 	}
 
 	return &CattleClient{
-		rancherClient:   apiClient,
-		driver:          spDriver,
-		storagepoolName: spName,
+		rancherClient: apiClient,
 	}, nil
 }
 
-func (c *CattleClient) CreateVolume(storagepoolUuid string, vol api.VolumeResponse) error {
+func (c *CattleClient) CreateVolume(driver string, vol api.VolumeResponse) error {
 	log.Debugf("create event %s", vol.UUID)
-	eveResource := c.processVolume("volume.create", storagepoolUuid, vol)
+	eveResource := c.processVolume("volume.create", driver, vol)
 	_, err := c.rancherClient.ExternalVolumeEvent.Create(eveResource)
 	return err
 }
 
-func (c *CattleClient) processVolume(event, storagepoolUuid string, vol api.VolumeResponse) *client.ExternalVolumeEvent {
+func (c *CattleClient) processVolume(event, driver string, vol api.VolumeResponse) *client.ExternalVolumeEvent {
 	opts := map[string]interface{}{}
 	volume := client.Volume{
 		Name:       vol.Name,
-		Driver:     c.driver,
+		Driver:     driver,
 		DriverOpts: opts,
-		ExternalId: fmt.Sprintf("%s://%s", c.driver, vol.Name),
+		ExternalId: vol.Name,
 	}
 	return &client.ExternalVolumeEvent{
-		EventType:             event,
-		ExternalId:            vol.Name,
-		StoragePoolExternalId: storagepoolUuid,
-		Volume:                volume,
+		EventType:  event,
+		ExternalId: vol.Name,
+		Volume:     volume,
 	}
 }
 
-func (c *CattleClient) DeleteVolume(storagepoolUuid string, vol api.VolumeResponse) error {
+func (c *CattleClient) DeleteVolume(driver string, vol api.VolumeResponse) error {
 	log.Debugf("delete event %s", vol.UUID)
-	eveResource := c.processVolume("volume.delete", storagepoolUuid, vol)
+	eveResource := c.processVolume("volume.delete", driver, vol)
 	err := c.rancherClient.ExternalVolumeEvent.Delete(eveResource)
 	return err
 }
 
-func (c *CattleClient) SyncStoragePool(storagepoolUuid string, hostUuids []string) error {
+func (c *CattleClient) SyncStoragePool(driver string, hostUuids []string) error {
 	log.Debugf("storagepool event %v", hostUuids)
 	sp := client.StoragePool{
-		Name:       c.storagepoolName,
-		ExternalId: storagepoolUuid,
+		Name:       driver,
+		ExternalId: driver,
+		DriverName: driver,
 	}
 	espe := &client.ExternalStoragePoolEvent{
 		EventType:   "storagepool.create",
 		HostUuids:   hostUuids,
-		ExternalId:  storagepoolUuid,
+		ExternalId:  driver,
 		StoragePool: sp,
 	}
 	_, err := c.rancherClient.ExternalStoragePoolEvent.Create(espe)

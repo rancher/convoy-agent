@@ -12,18 +12,18 @@ type VolumeAgent struct {
 	socketFile          string
 	healthCheckInterval int
 	cattleClient        cattle.CattleInterface
-	storagepoolUuid     string
 	hostUuid            string
+	driver              string
 }
 
-func NewVolumeAgent(healthCheckBaseDir, socketFile, hostUuid string, healthCheckInterval int, cattleClient cattle.CattleInterface, storagepoolUuid string) *VolumeAgent {
+func NewVolumeAgent(healthCheckBaseDir, socketFile, hostUuid string, healthCheckInterval int, cattleClient cattle.CattleInterface, driver string) *VolumeAgent {
 	return &VolumeAgent{
 		healthCheckBaseDir:  healthCheckBaseDir,
 		socketFile:          socketFile,
 		healthCheckInterval: healthCheckInterval,
 		cattleClient:        cattleClient,
-		storagepoolUuid:     storagepoolUuid,
 		hostUuid:            hostUuid,
+		driver:              driver,
 	}
 }
 
@@ -54,7 +54,7 @@ func (v *VolumeAgent) Run(controlChan chan bool) error {
 		createdVols := findCreatedVolumes(currVols, vols)
 
 		for _, vol := range deletedVols {
-			err := v.cattleClient.DeleteVolume(v.storagepoolUuid, vol)
+			err := v.cattleClient.DeleteVolume(v.driver, vol)
 			if err != nil {
 				log.Errorf("Error sending delete event for volume ID=[%s] err=[%v]", vol.UUID, err)
 				currVols[vol.UUID] = vols[vol.UUID]
@@ -62,7 +62,7 @@ func (v *VolumeAgent) Run(controlChan chan bool) error {
 		}
 
 		for _, vol := range createdVols {
-			err := v.cattleClient.CreateVolume(v.storagepoolUuid, vol)
+			err := v.cattleClient.CreateVolume(v.driver, vol)
 			if err != nil {
 				log.Errorf("Error sending create event for volume ID=[%s] err=[%v]", vol.UUID, err)
 				delete(currVols, vol.UUID)

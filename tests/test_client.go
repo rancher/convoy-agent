@@ -11,18 +11,18 @@ type testCattleClient struct {
 	hosts      [][]string
 }
 
-func (t *testCattleClient) CreateVolume(storagepoolUuid string, vol api.VolumeResponse) error {
+func (t *testCattleClient) CreateVolume(driver string, vol api.VolumeResponse) error {
 	t.lastEvents = append(t.lastEvents, fmt.Sprintf("CREATED_%s", vol.UUID))
 	return nil
 }
 
-func (t *testCattleClient) DeleteVolume(storagepoolUuid string, vol api.VolumeResponse) error {
+func (t *testCattleClient) DeleteVolume(driver string, vol api.VolumeResponse) error {
 	t.lastEvents = append(t.lastEvents, fmt.Sprintf("DELETED_%s", vol.UUID))
 	return nil
 }
 
-func (t *testCattleClient) SyncStoragePool(storagepoolUuid string, hostUuids []string) error {
-	t.lastEvents = append(t.lastEvents, fmt.Sprintf("SYNC_%s", storagepoolUuid))
+func (t *testCattleClient) SyncStoragePool(driver string, hostUuids []string) error {
+	t.lastEvents = append(t.lastEvents, fmt.Sprintf("SYNC_%s", driver))
 	t.hosts = append(t.hosts, hostUuids)
 	return nil
 }

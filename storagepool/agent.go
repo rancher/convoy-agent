@@ -15,17 +15,17 @@ var rootUuidFileName = "UUID"
 type StoragepoolAgent struct {
 	healthCheckInterval int
 	storagepoolRootDir  string
-	storagepoolUuid     string
+	driver              string
 	healthCheckBaseDir  string
 	healthCheckType     string
 	cattleClient        cattle.CattleInterface
 }
 
-func NewStoragepoolAgent(healthCheckInterval int, storagepoolRootDir, storagepoolUuid, healthCheckBaseDir, healthCheckType string, cattleClient cattle.CattleInterface) *StoragepoolAgent {
+func NewStoragepoolAgent(healthCheckInterval int, storagepoolRootDir, driver, healthCheckBaseDir, healthCheckType string, cattleClient cattle.CattleInterface) *StoragepoolAgent {
 	return &StoragepoolAgent{
 		healthCheckInterval: healthCheckInterval,
 		storagepoolRootDir:  storagepoolRootDir,
-		storagepoolUuid:     storagepoolUuid,
+		driver:              driver,
 		healthCheckBaseDir:  healthCheckBaseDir,
 		healthCheckType:     healthCheckType,
 		cattleClient:        cattleClient,
@@ -33,8 +33,9 @@ func NewStoragepoolAgent(healthCheckInterval int, storagepoolRootDir, storagepoo
 }
 
 func (s *StoragepoolAgent) Run(metadataUrl string) error {
+	// TODO Can we delete his non metadata healthcheck code?
 	if _, err := os.Stat(filepath.Join(s.storagepoolRootDir, rootUuidFileName)); os.IsNotExist(err) && s.healthCheckType != "metadata" {
-		err := ioutil.WriteFile(filepath.Join(s.storagepoolRootDir, rootUuidFileName), []byte(s.storagepoolUuid), 0644)
+		err := ioutil.WriteFile(filepath.Join(s.storagepoolRootDir, rootUuidFileName), []byte(s.driver), 0644)
 		if err != nil {
 			return err
 		}
@@ -96,7 +97,7 @@ func (s *StoragepoolAgent) Run(metadataUrl string) error {
 			for k := range toSend {
 				toSendList = append(toSendList, k)
 			}
-			err := s.cattleClient.SyncStoragePool(s.storagepoolUuid, toSendList)
+			err := s.cattleClient.SyncStoragePool(s.driver, toSendList)
 			if err != nil {
 				log.Errorf("Error syncing storage pool events [%v]", err)
 				continue

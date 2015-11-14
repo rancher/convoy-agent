@@ -1,7 +1,6 @@
 convoy-gluster-volume:
-  restart: always
   labels:
-          io.rancher.scheduler.affinity:container_label_ne: io.rancher.stack_service.name=convoy-gluster-volume
+    io.rancher.scheduler.affinity:container_label_ne: io.rancher.stack_service.name=convoy-gluster-volume
     io.rancher.container.pull_image: always
     io.rancher.container.create_agent: 'true'
     io.rancher.scheduler.global: 'true'
