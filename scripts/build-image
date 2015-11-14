@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -e
+
+LOCAL=false
+while [[ $# > 0 ]]; do
+    key="$1"
+    echo $key
+    case $key in
+        -l|--local)
+            LOCAL="true"
+            shift
+        ;;
+        *)
+        ;;
+    esac
+done
+
+cd $(dirname $0)/..
+
+TARGET="dist/artifacts/convoy-agent.tar.xz"
+
+if [ "$LOCAL" != true ]; then
+    rm -rf dist/artifacts
+    mkdir -p dist/artifacts
+
+    ARTIFACT_URL=$(curl -s https://api.github.com/repos/rancher/convoy-agent/releases/latest | jq -r .assets[0].browser_download_url)
+    TAG=${TAG:-$(curl -s https://api.github.com/repos/rancher/convoy-agent/releases/latest | jq -r .tag_name)}
+    echo "Downloading ${ARTIFACT_URL}"
+    curl -o ${TARGET} -L ${ARTIFACT_URL}
+fi
+
+echo "Uncompressing..."
+tar -xJvf ${TARGET} -C dist/artifacts/
+
+ls dist
+echo done list
+rm -rf dist/build
+mkdir -p dist/build/volume-agent
+mkdir -p dist/build/storagepool-agent
+cp dist/artifacts/convoy-agent dist/build/volume-agent
+cp dist/artifacts/convoy-agent dist/build/storagepool-agent
+cp packaging/convoy-gluster/volume-agent/* dist/build/volume-agent
+cp packaging/convoy-gluster/storagepool-agent/* dist/build/storagepool-agent
+
+TAG=${TAG:=dev}
+REPO=${REPO:=rancher}
+IMAGE_NAME=${IMAGE:-"rancher/convoy-agent"}:${TAG}
+
+echo "Building Docker image ${REPO}/volume-agent:${TAG}"
+docker build --rm -t ${REPO}/volume-agent:${TAG} dist/build/volume-agent
+
+echo "Building Docker image ${REPO}/storagepool-agent:${TAG}"
+docker build --rm -t ${REPO}/storagepool-agent:${TAG} dist/build/storagepool-agent
