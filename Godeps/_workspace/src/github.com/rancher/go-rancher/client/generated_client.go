@@ -17,6 +17,9 @@ type RancherClient struct {
 	InstanceHealthCheck                      InstanceHealthCheckOperations
 	ServiceLink                              ServiceLinkOperations
 	ServiceUpgrade                           ServiceUpgradeOperations
+	ServiceUpgradeStrategy                   ServiceUpgradeStrategyOperations
+	InServiceUpgradeStrategy                 InServiceUpgradeStrategyOperations
+	ToServiceUpgradeStrategy                 ToServiceUpgradeStrategyOperations
 	AddLoadBalancerInput                     AddLoadBalancerInputOperations
 	AddRemoveClusterHostInput                AddRemoveClusterHostInputOperations
 	AddRemoveLoadBalancerHostInput           AddRemoveLoadBalancerHostInputOperations
@@ -54,6 +57,10 @@ type RancherClient struct {
 	PullTask                                 PullTaskOperations
 	ExternalVolumeEvent                      ExternalVolumeEventOperations
 	ExternalStoragePoolEvent                 ExternalStoragePoolEventOperations
+	ExternalServiceEvent                     ExternalServiceEventOperations
+	EnvironmentUpgrade                       EnvironmentUpgradeOperations
+	ExternalDnsEvent                         ExternalDnsEventOperations
+	ExternalHostEvent                        ExternalHostEventOperations
 	Account                                  AccountOperations
 	Agent                                    AgentOperations
 	Certificate                              CertificateOperations
@@ -123,6 +130,7 @@ type RancherClient struct {
 	PacketConfig                             PacketConfigOperations
 	RackspaceConfig                          RackspaceConfigOperations
 	SoftlayerConfig                          SoftlayerConfigOperations
+	UbiquityConfig                           UbiquityConfigOperations
 	VirtualboxConfig                         VirtualboxConfigOperations
 	VmwarevcloudairConfig                    VmwarevcloudairConfigOperations
 	VmwarevsphereConfig                      VmwarevsphereConfigOperations
@@ -153,6 +161,9 @@ func constructClient() *RancherClient {
 	client.InstanceHealthCheck = newInstanceHealthCheckClient(client)
 	client.ServiceLink = newServiceLinkClient(client)
 	client.ServiceUpgrade = newServiceUpgradeClient(client)
+	client.ServiceUpgradeStrategy = newServiceUpgradeStrategyClient(client)
+	client.InServiceUpgradeStrategy = newInServiceUpgradeStrategyClient(client)
+	client.ToServiceUpgradeStrategy = newToServiceUpgradeStrategyClient(client)
 	client.AddLoadBalancerInput = newAddLoadBalancerInputClient(client)
 	client.AddRemoveClusterHostInput = newAddRemoveClusterHostInputClient(client)
 	client.AddRemoveLoadBalancerHostInput = newAddRemoveLoadBalancerHostInputClient(client)
@@ -190,6 +201,10 @@ func constructClient() *RancherClient {
 	client.PullTask = newPullTaskClient(client)
 	client.ExternalVolumeEvent = newExternalVolumeEventClient(client)
 	client.ExternalStoragePoolEvent = newExternalStoragePoolEventClient(client)
+	client.ExternalServiceEvent = newExternalServiceEventClient(client)
+	client.EnvironmentUpgrade = newEnvironmentUpgradeClient(client)
+	client.ExternalDnsEvent = newExternalDnsEventClient(client)
+	client.ExternalHostEvent = newExternalHostEventClient(client)
 	client.Account = newAccountClient(client)
 	client.Agent = newAgentClient(client)
 	client.Certificate = newCertificateClient(client)
@@ -259,6 +274,7 @@ func constructClient() *RancherClient {
 	client.PacketConfig = newPacketConfigClient(client)
 	client.RackspaceConfig = newRackspaceConfigClient(client)
 	client.SoftlayerConfig = newSoftlayerConfigClient(client)
+	client.UbiquityConfig = newUbiquityConfigClient(client)
 	client.VirtualboxConfig = newVirtualboxConfigClient(client)
 	client.VmwarevcloudairConfig = newVmwarevcloudairConfigClient(client)
 	client.VmwarevsphereConfig = newVmwarevsphereConfigClient(client)

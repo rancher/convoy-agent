@@ -117,9 +117,9 @@ type LaunchConfig struct {
 
 	RequestedHostId string `json:"requestedHostId,omitempty" yaml:"requested_host_id,omitempty"`
 
-	RestartPolicy *RestartPolicy `json:"restartPolicy,omitempty" yaml:"restart_policy,omitempty"`
-
 	SecurityOpt []string `json:"securityOpt,omitempty" yaml:"security_opt,omitempty"`
+
+	StartCount int64 `json:"startCount,omitempty" yaml:"start_count,omitempty"`
 
 	StartOnCreate bool `json:"startOnCreate,omitempty" yaml:"start_on_create,omitempty"`
 
@@ -228,6 +228,11 @@ func (c *LaunchConfigClient) List(opts *ListOpts) (*LaunchConfigCollection, erro
 func (c *LaunchConfigClient) ById(id string) (*LaunchConfig, error) {
 	resp := &LaunchConfig{}
 	err := c.rancherClient.doById(LAUNCH_CONFIG_TYPE, id, resp)
+	if apiError, ok := err.(*ApiError); ok {
+		if apiError.StatusCode == 404 {
+			return nil, nil
+		}
+	}
 	return resp, err
 }
 
