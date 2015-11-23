@@ -15,7 +15,7 @@ import (
 )
 
 const convoyFlagNamePrefix string = "convoy-"
-const convoyFlagUsagePrefix string = "Passed to convioy. "
+const convoyFlagUsagePrefix string = "Passed to convoy. "
 const flagFmt string = "--%s=%s"
 
 var convoyFlagNames = []string{}
@@ -45,7 +45,7 @@ func init() {
 	}
 
 	for _, f := range convoyflags.DaemonFlags {
-		// This type switch is annoy, but Name is not exposed on the clie.Flag struct, so we have to cast to the specific types.
+		// This type switch is annoying, but Name is not exposed on the cli.Flag struct, so we have to cast to the specific types.
 		switch typedF := f.(type) {
 		case cli.StringFlag:
 			typedF.Name = convoyFlagNamePrefix + typedF.Name

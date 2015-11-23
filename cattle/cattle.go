@@ -63,7 +63,7 @@ func (c *CattleClient) processVolume(event, driver string, vol api.VolumeRespons
 func (c *CattleClient) DeleteVolume(driver string, vol api.VolumeResponse) error {
 	log.Debugf("delete event %s", vol.UUID)
 	eveResource := c.processVolume("volume.delete", driver, vol)
-	err := c.rancherClient.ExternalVolumeEvent.Delete(eveResource)
+	_, err := c.rancherClient.ExternalVolumeEvent.Create(eveResource)
 	return err
 }
 
