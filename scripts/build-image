@@ -36,19 +36,12 @@ tar -xJvf ${TARGET} -C dist/artifacts/
 ls dist
 echo done list
 rm -rf dist/build
-mkdir -p dist/build/volume-agent
-mkdir -p dist/build/storagepool-agent
-cp dist/artifacts/convoy-agent dist/build/volume-agent
-cp dist/artifacts/convoy-agent dist/build/storagepool-agent
-cp packaging/convoy-gluster/volume-agent/* dist/build/volume-agent
-cp packaging/convoy-gluster/storagepool-agent/* dist/build/storagepool-agent
+mkdir -p dist/build/convoy-agent
+cp dist/artifacts/convoy-agent dist/build/convoy-agent
+cp packaging/convoy-agent/* dist/build/convoy-agent
 
 TAG=${TAG:=dev}
 REPO=${REPO:=rancher}
-IMAGE_NAME=${IMAGE:-"rancher/convoy-agent"}:${TAG}
 
-echo "Building Docker image ${REPO}/volume-agent:${TAG}"
-docker build --rm -t ${REPO}/convoy-gluster-volume-agent:${TAG} dist/build/volume-agent
-
-echo "Building Docker image ${REPO}/storagepool-agent:${TAG}"
-docker build --rm -t ${REPO}/convoy-gluster-storagepool-agent:${TAG} dist/build/storagepool-agent
+echo "Building Docker image ${REPO}/convoy-agent:${TAG}"
+docker build --rm -t ${REPO}/convoy-agent:${TAG} dist/build/convoy-agent

@@ -1,0 +1,89 @@
+#!/bin/sh
+
+set -e
+
+get_metadata() {
+    echo $(curl -s http://rancher-metadata/latest/self/service/metadata/$1)
+}
+
+wait_for_metadata() {
+    counter=0
+    printf 'Waiting for metadata'
+    until $(curl --output /dev/null --silent --head --fail http://rancher-metadata); do
+        printf '.'
+        sleep 3
+        counter=$((counter + 1))
+        if [ "$counter" -gt 10 ]; then
+            echo "Could not reach metadata." >&2
+            exit 1
+        fi
+    done
+}
+
+storagepool_agent() {
+    wait_for_metadata
+
+    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
+
+    exec convoy-agent \
+        -d \
+        --url $CATTLE_URL \
+        --access-key $CATTLE_ACCESS_KEY \
+        --secret-key $CATTLE_SECRET_KEY \
+        --storagepool-driver $STACK_NAME \
+        storagepool \
+        --storagepool-healthcheck-type metadata
+}
+
+volume_agent_glusterfs() {
+    wait_for_metadata
+
+    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
+    STACK_UUID=$(curl -s http://rancher-metadata/latest/self/stack/uuid)
+    CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
+
+    /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-agent-glusterfs-internal
+}
+
+volume_agent_glusterfs_internal() {
+    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
+    STACK_UUID=$(curl -s http://rancher-metadata/latest/self/stack/uuid)
+    HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
+    GLUSTER_STACK_NAME=$(get_metadata gluster_stack)
+    SERVICE_NAME=$(get_metadata gluster_service)
+    VOLUME_POOL=$(get_metadata volume_pool)
+    CONVOY_SOCK_IN_CON=/host/run/conoy-$STACK_NAME-$STACK_UUID.sock
+    CONVOY_SOCK_ON_HOST=/run/conoy-$STACK_NAME-$STACK_UUID.sock
+    CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
+
+    echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
+    echo "unix://$CONVOY_SOCK_ON_HOST" > /etc/docker/plugins/$STACK_NAME.spec
+
+    exec convoy-agent \
+        --url $CATTLE_URL \
+        --access-key $CATTLE_ACCESS_KEY \
+        --secret-key $CATTLE_SECRET_KEY \
+        --storagepool-driver $STACK_NAME \
+        volume \
+        --socket $CONVOY_SOCK_IN_CON \
+        --host-uuid $HOST_UUID \
+        --convoy-root $CONVOY_ROOT \
+        --convoy-drivers glusterfs \
+        --convoy-driver-opts glusterfs.defaultvolumepool=$VOLUME_POOL \
+        --convoy-driver-opts glusterfs.servers=glusterfs
+}
+
+case "$1" in
+    volume-agent-glusterfs)
+        volume_agent_glusterfs
+        ;;
+    volume-agent-glusterfs-internal)
+        volume_agent_glusterfs_internal
+        ;;
+    storagepool-agent)
+        storagepool_agent
+        ;;
+    *)
+        echo "Usage: $0 {volume-agent|storagepool-agent}"
+        exit 1
+esac
