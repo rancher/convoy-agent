@@ -58,8 +58,8 @@ volume_agent_glusterfs_internal() {
     GLUSTER_STACK_NAME=$(get_metadata gluster_stack)
     SERVICE_NAME=$(get_metadata gluster_service)
     VOLUME_POOL=$(get_metadata volume_pool)
-    CONVOY_SOCK_IN_CON=/host/run/conoy-$STACK_NAME-$STACK_UUID.sock
-    CONVOY_SOCK_ON_HOST=/run/conoy-$STACK_NAME-$STACK_UUID.sock
+    CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
+    CONVOY_SOCK_ON_HOST=/var/run/conoy-$STACK_NAME.sock
     CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
 
     echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
