@@ -8,7 +8,7 @@ cd $(dirname $0)/..
 
 set_project_vars
 
-nohup convoy daemon --drivers vfs --driver-opts vfs.path=$(pwd) & 
+convoy daemon --drivers vfs --driver-opts vfs.path=$(pwd) 1>/dev/null &
 
 mkdir -p tests/.healthcheck
 mkdir -p tests/.healthcheck2

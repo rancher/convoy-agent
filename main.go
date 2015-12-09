@@ -61,6 +61,11 @@ func main() {
 			Name:  "storagepool-driver",
 			Usage: "set the storage pool driver.",
 		},
+		cli.StringFlag{
+			Name:  "socket, s",
+			Value: "/var/run/convoy/convoy.sock",
+			Usage: "specify unix domain socket for communicating with convoy server",
+		},
 	}
 
 	commands := append(volume.Commands, storagepool.Commands...)

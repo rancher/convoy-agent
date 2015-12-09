@@ -31,13 +31,7 @@ var Commands = []cli.Command{
 }
 
 func init() {
-	flags := []cli.Flag{
-		cli.StringFlag{
-			Name:  "socket, s",
-			Value: "/var/run/convoy/convoy.sock",
-			Usage: "specify unix domain socket for communicating with convoy server",
-		},
-	}
+	flags := []cli.Flag{}
 
 	for _, f := range convoyflags.DaemonFlags {
 		// This type switch is annoying, but Name is not exposed on the cli.Flag struct, so we have to cast to the specific types.
@@ -68,7 +62,7 @@ func init() {
 }
 
 func volumeAgent(c *cli.Context) {
-	socket := c.String("socket")
+	socket := c.GlobalString("socket")
 	cattleUrl := c.GlobalString("url")
 	cattleAccessKey := c.GlobalString("access-key")
 	cattleSecretKey := c.GlobalString("secret-key")

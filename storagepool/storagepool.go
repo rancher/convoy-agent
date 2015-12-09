@@ -3,7 +3,9 @@ package storagepool
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+
 	"github.com/rancher/convoy-agent/cattle"
+	"github.com/rancher/convoy-agent/cattleevents"
 )
 
 var Commands = []cli.Command{
@@ -17,12 +19,12 @@ var Commands = []cli.Command{
 				Value: "http://rancher-metadata/latest",
 			},
 		},
-		Action:    storagepoolAgent,
+		Action:    start,
 		ShortName: "sp",
 	},
 }
 
-func storagepoolAgent(c *cli.Context) {
+func start(c *cli.Context) {
 	healthCheckInterval := c.GlobalInt("healthcheck-interval")
 
 	cattleUrl := c.GlobalString("url")
@@ -31,6 +33,8 @@ func storagepoolAgent(c *cli.Context) {
 	if c.GlobalBool("debug") {
 		log.SetLevel(log.DebugLevel)
 	}
+
+	socket := c.GlobalString("socket")
 
 	storagepoolRootDir := c.GlobalString("storagepool-rootdir")
 	driver := c.GlobalString("storagepool-driver")
@@ -43,11 +47,29 @@ func storagepoolAgent(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, driver, cattleClient)
+	resultChan := make(chan error)
 
-	metadataUrl := c.String("storagepool-metadata-url")
+	go func(rc chan error) {
+		storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, driver, cattleClient)
+		metadataUrl := c.String("storagepool-metadata-url")
+		err := storagepoolAgent.Run(metadataUrl)
+		log.Errorf("Error while running storage pool agent [%v]", err)
+		rc <- err
+	}(resultChan)
 
-	if err := storagepoolAgent.Run(metadataUrl); err != nil {
-		log.Fatal(err)
-	}
+	go func(rc chan error) {
+		conf := cattleevents.Config{
+			CattleURL:       cattleUrl,
+			CattleAccessKey: cattleAccessKey,
+			CattleSecretKey: cattleSecretKey,
+			WorkerCount:     10,
+			Socket:          socket,
+		}
+		err := cattleevents.ConnectToEventStream(conf)
+		log.Errorf("Cattle event listener exited with error: %s", err)
+		rc <- err
+	}(resultChan)
+
+	<-resultChan
+	log.Info("Exiting.")
 }
