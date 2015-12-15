@@ -35,6 +35,15 @@ storagepool_agent() {
         --storagepool-healthcheck-type metadata
 }
 
+common_vars() {
+    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
+    STACK_UUID=$(curl -s http://rancher-metadata/latest/self/stack/uuid)
+    HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
+    CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
+    CONVOY_SOCK_ON_HOST=/var/run/conoy-$STACK_NAME.sock
+    CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
+}
+
 volume_agent_glusterfs() {
     if [ ! -e /dev/fuse ]; then
         echo Failed to find /dev/fuse attempting: modprobe fuse
@@ -43,24 +52,15 @@ volume_agent_glusterfs() {
     fi
 
     wait_for_metadata
-
-    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
-    STACK_UUID=$(curl -s http://rancher-metadata/latest/self/stack/uuid)
-    CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
-
+    common_vars
     /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-agent-glusterfs-internal
 }
 
 volume_agent_glusterfs_internal() {
-    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
-    STACK_UUID=$(curl -s http://rancher-metadata/latest/self/stack/uuid)
-    HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
+    common_vars
     GLUSTER_STACK_NAME=$(get_metadata gluster_stack)
     SERVICE_NAME=$(get_metadata gluster_service)
     VOLUME_POOL=$(get_metadata volume_pool)
-    CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
-    CONVOY_SOCK_ON_HOST=/var/run/conoy-$STACK_NAME.sock
-    CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
 
     echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
     echo "unix://$CONVOY_SOCK_ON_HOST" > /etc/docker/plugins/$STACK_NAME.spec
@@ -79,7 +79,52 @@ volume_agent_glusterfs_internal() {
         --convoy-driver-opts glusterfs.servers=glusterfs
 }
 
+volume_agent_nfs() {
+    wait_for_metadata
+    common_vars
+    /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-agent-nfs-internal
+}
+
+
+volume_agent_nfs_internal() {
+    common_vars
+    MNT_HOST=$(get_metadata nfs_server)
+    MNT_DIR=$(get_metadata mount_dir)
+    MNT_OPTS=$(get_metadata mount_opts)
+    MNT_PT=$CONVOY_ROOT/mnt
+
+    echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
+    echo "unix://$CONVOY_SOCK_ON_HOST" > /etc/docker/plugins/$STACK_NAME.spec
+
+    echo "Mounting at: $MNT_PT"
+    rpcbind
+    mkdir -p $MNT_PT
+    if [ -n "$MNT_OPTS" ]; then
+        MNT_OPTS="-o $MNT_OPTS"
+    fi
+    echo "Mounting nfs. Command: mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_DIR $MNT_PT"
+    mountpoint -q $MNT_PT || mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_DIR $MNT_PT
+
+    exec convoy-agent \
+        --url $CATTLE_URL \
+        --access-key $CATTLE_ACCESS_KEY \
+        --secret-key $CATTLE_SECRET_KEY \
+        --storagepool-driver $STACK_NAME \
+        volume \
+        --socket $CONVOY_SOCK_IN_CON \
+        --host-uuid $HOST_UUID \
+        --convoy-root $CONVOY_ROOT \
+        --convoy-drivers vfs \
+        --convoy-driver-opts vfs.path=$MNT_PT
+}
+
 case "$1" in
+    volume-agent-nfs)
+        volume_agent_nfs
+        ;;
+    volume-agent-nfs-internal)
+        volume_agent_nfs_internal
+        ;;
     volume-agent-glusterfs)
         volume_agent_glusterfs
         ;;
@@ -90,6 +135,6 @@ case "$1" in
         storagepool_agent
         ;;
     *)
-        echo "Usage: $0 {volume-agent|storagepool-agent}"
+        echo "Usage: $0 {volume-agent-glusterfs|volume-agent-nfs|storagepool-agent}"
         exit 1
 esac
