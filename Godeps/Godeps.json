@@ -7,8 +7,8 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.6-1-g8bca266",
-			"Rev": "8bca2664072173a3c71db4c28ca8d304079b1787"
+			"Comment": "v0.8.7-53-g446d1c1",
+			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
@@ -20,6 +20,10 @@
 			"Rev": "c66b764651cdca39f42d263b07a507c6e8b58ee9"
 		},
 		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "281073eb9eb092240d33ef253c404f1cca550309"
+		},
+		{
 			"ImportPath": "github.com/rancher/convoy/api",
 			"Comment": "v0.4-10-gb45f61f",
 			"Rev": "b45f61f9283ab5d8d8e92c11625b744ae5e393e4"
@@ -28,6 +32,16 @@
 			"ImportPath": "github.com/rancher/convoy/client/flags",
 			"Comment": "v0.4-10-gb45f61f",
 			"Rev": "b45f61f9283ab5d8d8e92c11625b744ae5e393e4"
+		},
+		{
+			"ImportPath": "github.com/rancher/go-machine-service/events",
+			"Comment": "v0.23.0",
+			"Rev": "4c789a5b6ac0035e795ecc5071e5faeafad2296e"
+		},
+		{
+			"ImportPath": "github.com/rancher/go-machine-service/locks",
+			"Comment": "v0.23.0",
+			"Rev": "4c789a5b6ac0035e795ecc5071e5faeafad2296e"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-rancher-metadata/metadata",
@@ -41,6 +55,10 @@
 		{
 			"ImportPath": "github.com/rancher/kubernetes-agent/healthcheck",
 			"Rev": "ebc4233b0edaf878b9a891cf0350de6e85fe1777"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "11d3bc7aa68e238947792f30573146a3231fc0f1"
 		}
 	]
 }
