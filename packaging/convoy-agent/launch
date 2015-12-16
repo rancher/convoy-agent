@@ -31,8 +31,7 @@ storagepool_agent() {
         --access-key $CATTLE_ACCESS_KEY \
         --secret-key $CATTLE_SECRET_KEY \
         --storagepool-driver $STACK_NAME \
-        storagepool \
-        --storagepool-healthcheck-type metadata
+        storagepool
 }
 
 common_vars() {

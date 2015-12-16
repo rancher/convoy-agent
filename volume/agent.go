@@ -8,21 +8,18 @@ import (
 )
 
 type VolumeAgent struct {
-	healthCheckBaseDir  string
 	socketFile          string
 	healthCheckInterval int
+	volumeQueryInterval int
 	cattleClient        cattle.CattleInterface
-	hostUuid            string
 	driver              string
 }
 
-func NewVolumeAgent(healthCheckBaseDir, socketFile, hostUuid string, healthCheckInterval int, cattleClient cattle.CattleInterface, driver string) *VolumeAgent {
+func NewVolumeAgent(socketFile string, volumeQueryInterval int, cattleClient cattle.CattleInterface, driver string) *VolumeAgent {
 	return &VolumeAgent{
-		healthCheckBaseDir:  healthCheckBaseDir,
 		socketFile:          socketFile,
-		healthCheckInterval: healthCheckInterval,
+		volumeQueryInterval: volumeQueryInterval,
 		cattleClient:        cattleClient,
-		hostUuid:            hostUuid,
 		driver:              driver,
 	}
 }
@@ -33,8 +30,6 @@ func (v *VolumeAgent) Run(controlChan chan bool) error {
 		return err
 	}
 
-	go writeHealthCheckFile(v.hostUuid, v.healthCheckBaseDir, v.healthCheckInterval, controlChan)
-
 	vols := Volume{}
 
 	for {
@@ -42,7 +37,7 @@ func (v *VolumeAgent) Run(controlChan chan bool) error {
 		case <-controlChan:
 			controlChan <- true
 			return nil
-		case <-time.After(1 * time.Second):
+		case <-time.After(time.Duration(v.volumeQueryInterval) * time.Millisecond):
 		}
 
 		currVols, err := convoy.GetCurrVolumes()

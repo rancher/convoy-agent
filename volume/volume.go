@@ -37,11 +37,6 @@ func init() {
 			Value: "/var/run/convoy/convoy.sock",
 			Usage: "specify unix domain socket for communicating with convoy server",
 		},
-		cli.StringFlag{
-			Name:   "host-uuid",
-			Usage:  "set the host uuid for the host",
-			EnvVar: "CATTLE_HOST_UUID",
-		},
 	}
 
 	for _, f := range convoyflags.DaemonFlags {
@@ -81,17 +76,9 @@ func volumeAgent(c *cli.Context) {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	healthCheckInterval := c.GlobalInt("healthcheck-interval")
-	healthCheckBaseDir := c.GlobalString("healthcheck-basedir")
-
 	driver := c.GlobalString("storagepool-driver")
 	if driver == "" {
 		logrus.Fatal("required field storagepool-driver has not been set")
-	}
-
-	hostUuid := c.String("host-uuid")
-	if hostUuid == "" {
-		logrus.Fatal("required field host-uuid has not been set")
 	}
 
 	resultChan := make(chan error)
@@ -113,7 +100,7 @@ func volumeAgent(c *cli.Context) {
 		if err != nil {
 			rc <- fmt.Errorf("Error getting cattle client: %v", err)
 		}
-		volAgent := NewVolumeAgent(healthCheckBaseDir, socket, hostUuid, healthCheckInterval, cattleClient, driver)
+		volAgent := NewVolumeAgent(socket, 1000, cattleClient, driver)
 		err = volAgent.Run(controlChan)
 		logrus.Infof("volume-agent exited with error: %v", err)
 		rc <- err

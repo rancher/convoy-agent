@@ -44,7 +44,7 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:  "healthcheck-interval",
-			Value: 5,
+			Value: 5000,
 			Usage: "set the frequency of performing healthchecks",
 		},
 		cli.StringFlag{

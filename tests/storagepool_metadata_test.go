@@ -99,13 +99,13 @@ func TestReadsHostsCorrectly(t *testing.T) {
 	setContainers(containers)
 
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcMetadataType, tc)
+		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
 		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
-	time.Sleep(10 * time.Second)
+	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
 	if len(uuids) != 2 {
@@ -209,13 +209,13 @@ func TestDetectsVersionChange(t *testing.T) {
 	}
 	setContainers(containers)
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcMetadataType, tc)
+		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
 		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
-	time.Sleep(10 * time.Second)
+	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
 	if len(uuids) != 2 {
@@ -314,7 +314,7 @@ func TestDetectsVersionChange(t *testing.T) {
 		},
 	}
 	setContainers(containers)
-	time.Sleep(10 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	uuids = tc.getLastSync()
 	if len(uuids) != 4 {
@@ -425,13 +425,13 @@ func TestNoVersionChange(t *testing.T) {
 	}
 	setContainers(containers)
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcMetadataType, tc)
+		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
 		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
-	time.Sleep(10 * time.Second)
+	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
 	if len(uuids) != 2 {
@@ -618,13 +618,13 @@ func TestVersionChangeAndDeletion(t *testing.T) {
 	}
 	setContainers(containers)
 	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(5, ".root", "1234567890", sphc, hcMetadataType, tc)
+		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
 		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
 		if err != nil {
 			t.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
-	time.Sleep(10 * time.Second)
+	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
 	if len(uuids) != 2 {
@@ -705,7 +705,7 @@ func TestVersionChangeAndDeletion(t *testing.T) {
 		},
 	}
 	setContainers(newContainers)
-	time.Sleep(10 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	uuids = tc.getLastSync()
 	if len(uuids) != 1 {

@@ -12,11 +12,6 @@ var Commands = []cli.Command{
 		Usage: "Start convoy-agent as a storagepool agent",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "storagepool-healthcheck-type",
-				Usage: "set the healthcheck type [file | metadata]",
-				Value: "file",
-			},
-			cli.StringFlag{
 				Name:  "storagepool-metadata-url",
 				Usage: "set the metadata url",
 				Value: "http://rancher-metadata/latest",
@@ -29,8 +24,6 @@ var Commands = []cli.Command{
 
 func storagepoolAgent(c *cli.Context) {
 	healthCheckInterval := c.GlobalInt("healthcheck-interval")
-	healthCheckBaseDir := c.GlobalString("healthcheck-basedir")
-	healthCheckType := c.String("storagepool-healthcheck-type")
 
 	cattleUrl := c.GlobalString("url")
 	cattleAccessKey := c.GlobalString("access-key")
@@ -50,7 +43,7 @@ func storagepoolAgent(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, driver, healthCheckBaseDir, healthCheckType, cattleClient)
+	storagepoolAgent := NewStoragepoolAgent(healthCheckInterval, storagepoolRootDir, driver, cattleClient)
 
 	metadataUrl := c.String("storagepool-metadata-url")
 
