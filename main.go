@@ -44,7 +44,7 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:  "healthcheck-interval",
-			Value: 5,
+			Value: 5000,
 			Usage: "set the frequency of performing healthchecks",
 		},
 		cli.StringFlag{
@@ -60,6 +60,11 @@ func main() {
 		cli.StringFlag{
 			Name:  "storagepool-driver",
 			Usage: "set the storage pool driver.",
+		},
+		cli.StringFlag{
+			Name:  "socket, s",
+			Value: "/var/run/convoy/convoy.sock",
+			Usage: "specify unix domain socket for communicating with convoy server",
 		},
 	}
 

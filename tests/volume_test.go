@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,8 +8,6 @@ import (
 )
 
 var (
-	h  = "testhost"
-	hc = ".healthcheck"
 	sp = "1234567890"
 )
 
@@ -21,7 +17,7 @@ func waitForCreateDeleteEvents(t *testCattleClient, createChan chan<- string, de
 		case <-controlChan:
 			controlChan <- true
 			return
-		case <-time.After(1 * time.Second):
+		case <-time.After(100 * time.Millisecond):
 		}
 		ev := t.getLastEvent()
 		if ev != "" {
@@ -63,7 +59,7 @@ func TestCreateEventsOnStartup(t *testing.T) {
 	defer deleteVolume(uuid3)
 
 	go func() {
-		va := volume.NewVolumeAgent(hc, socketFile, h, 5, tc, sp)
+		va := volume.NewVolumeAgent(socketFile, 100, tc, sp)
 		err := va.Run(controlChan)
 		if err != nil {
 			t.Fatalf("Error starting convoy agent err=[%v]", err)
@@ -119,7 +115,7 @@ func TestNewCreateEventsAfterStartup(t *testing.T) {
 	tc := &testCattleClient{}
 
 	go func() {
-		va := volume.NewVolumeAgent(hc, socketFile, h, 5, tc, sp)
+		va := volume.NewVolumeAgent(socketFile, 100, tc, sp)
 		err := va.Run(controlChan)
 		if err != nil {
 			t.Fatalf("Error starting convoy agent err=[%v]", err)
@@ -167,7 +163,7 @@ func TestNewDeleteEventsAfterStartup(t *testing.T) {
 	tc := &testCattleClient{}
 
 	go func() {
-		va := volume.NewVolumeAgent(hc, socketFile, h, 5, tc, sp)
+		va := volume.NewVolumeAgent(socketFile, 100, tc, sp)
 		err := va.Run(controlChan)
 		if err != nil {
 			t.Fatalf("Error starting convoy agent err=[%v]", err)
@@ -225,48 +221,4 @@ func TestNewDeleteEventsAfterStartup(t *testing.T) {
 	}
 	controlChan <- true
 
-}
-
-func TestHealthCheckFilesUpdated(t *testing.T) {
-	createChan := make(chan string, 10)
-	deleteChan := make(chan string, 10)
-
-	controlChan := make(chan bool, 1)
-
-	//guranteed to be random
-	randomUuid := "2b4c73-e432-45f4-96f2-97e0b546e840i"
-
-	tc := &testCattleClient{}
-
-	go func() {
-		va := volume.NewVolumeAgent(hc, socketFile, randomUuid, 5, tc, sp)
-		err := va.Run(controlChan)
-		if err != nil {
-			t.Fatalf("Error starting convoy agent err=[%v]", err)
-		}
-	}()
-
-	go waitForCreateDeleteEvents(tc, createChan, deleteChan, controlChan)
-	<-time.After(10 * time.Second)
-
-	fInfo, err := os.Stat(filepath.Join(hc, randomUuid))
-	if err != nil {
-		t.Fatalf("Error reading healthcheck file err [%v]", err)
-	}
-
-	pointOfRef := fInfo.ModTime()
-
-	<-time.After(5 * time.Second)
-
-	fInfo, err = os.Stat(filepath.Join(hc, randomUuid))
-	if err != nil {
-		t.Fatalf("Error reading healthcheck file err [%v]", err)
-	}
-
-	diff := fInfo.ModTime().Unix() - pointOfRef.Unix()
-	if diff <= 0 {
-		t.Fatalf("healthcheck file has not been updated, oldtime=[%v], newtime=[%v]", pointOfRef, fInfo.ModTime())
-	}
-
-	controlChan <- true
 }

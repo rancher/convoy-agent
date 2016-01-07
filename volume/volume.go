@@ -31,18 +31,7 @@ var Commands = []cli.Command{
 }
 
 func init() {
-	flags := []cli.Flag{
-		cli.StringFlag{
-			Name:  "socket, s",
-			Value: "/var/run/convoy/convoy.sock",
-			Usage: "specify unix domain socket for communicating with convoy server",
-		},
-		cli.StringFlag{
-			Name:   "host-uuid",
-			Usage:  "set the host uuid for the host",
-			EnvVar: "CATTLE_HOST_UUID",
-		},
-	}
+	flags := []cli.Flag{}
 
 	for _, f := range convoyflags.DaemonFlags {
 		// This type switch is annoying, but Name is not exposed on the cli.Flag struct, so we have to cast to the specific types.
@@ -73,7 +62,7 @@ func init() {
 }
 
 func volumeAgent(c *cli.Context) {
-	socket := c.String("socket")
+	socket := c.GlobalString("socket")
 	cattleUrl := c.GlobalString("url")
 	cattleAccessKey := c.GlobalString("access-key")
 	cattleSecretKey := c.GlobalString("secret-key")
@@ -81,17 +70,9 @@ func volumeAgent(c *cli.Context) {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	healthCheckInterval := c.GlobalInt("healthcheck-interval")
-	healthCheckBaseDir := c.GlobalString("healthcheck-basedir")
-
 	driver := c.GlobalString("storagepool-driver")
 	if driver == "" {
 		logrus.Fatal("required field storagepool-driver has not been set")
-	}
-
-	hostUuid := c.String("host-uuid")
-	if hostUuid == "" {
-		logrus.Fatal("required field host-uuid has not been set")
 	}
 
 	resultChan := make(chan error)
@@ -113,7 +94,7 @@ func volumeAgent(c *cli.Context) {
 		if err != nil {
 			rc <- fmt.Errorf("Error getting cattle client: %v", err)
 		}
-		volAgent := NewVolumeAgent(healthCheckBaseDir, socket, hostUuid, healthCheckInterval, cattleClient, driver)
+		volAgent := NewVolumeAgent(socket, 1000, cattleClient, driver)
 		err = volAgent.Run(controlChan)
 		logrus.Infof("volume-agent exited with error: %v", err)
 		rc <- err

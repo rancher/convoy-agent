@@ -24,6 +24,7 @@ storagepool_agent() {
     wait_for_metadata
 
     STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
+    CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
 
     exec convoy-agent \
         -d \
@@ -31,8 +32,8 @@ storagepool_agent() {
         --access-key $CATTLE_ACCESS_KEY \
         --secret-key $CATTLE_SECRET_KEY \
         --storagepool-driver $STACK_NAME \
-        storagepool \
-        --storagepool-healthcheck-type metadata
+        --socket $CONVOY_SOCK_IN_CON \
+        storagepool
 }
 
 common_vars() {
@@ -70,9 +71,8 @@ volume_agent_glusterfs_internal() {
         --access-key $CATTLE_ACCESS_KEY \
         --secret-key $CATTLE_SECRET_KEY \
         --storagepool-driver $STACK_NAME \
-        volume \
         --socket $CONVOY_SOCK_IN_CON \
-        --host-uuid $HOST_UUID \
+        volume \
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers glusterfs \
         --convoy-driver-opts glusterfs.defaultvolumepool=$VOLUME_POOL \
@@ -112,7 +112,6 @@ volume_agent_nfs_internal() {
         --storagepool-driver $STACK_NAME \
         volume \
         --socket $CONVOY_SOCK_IN_CON \
-        --host-uuid $HOST_UUID \
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers vfs \
         --convoy-driver-opts vfs.path=$MNT_PT
