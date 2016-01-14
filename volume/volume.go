@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -31,7 +32,13 @@ var Commands = []cli.Command{
 }
 
 func init() {
-	flags := []cli.Flag{}
+	flags := []cli.Flag{
+		cli.StringFlag{
+			Name:  "components",
+			Usage: "Which components to run: driver or agent",
+			Value: "driver,agent",
+		},
+	}
 
 	for _, f := range convoyflags.DaemonFlags {
 		// This type switch is annoying, but Name is not exposed on the cli.Flag struct, so we have to cast to the specific types.
@@ -63,6 +70,7 @@ func init() {
 
 func volumeAgent(c *cli.Context) {
 	socket := c.GlobalString("socket")
+	components := c.GlobalString("components")
 	cattleUrl := c.GlobalString("url")
 	cattleAccessKey := c.GlobalString("access-key")
 	cattleSecretKey := c.GlobalString("secret-key")
@@ -77,28 +85,32 @@ func volumeAgent(c *cli.Context) {
 
 	resultChan := make(chan error)
 
-	go func(rc chan<- error) {
-		cmdArgs := buildConvoyCmdArgs(c, socket)
-		cmd := exec.Command("convoy", cmdArgs...)
-		logrus.Infof("Launching convoy with args: %s", cmdArgs)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		logrus.Infof("convoy exited with error: %v", err)
-		rc <- err
-	}(resultChan)
+	if strings.Contains(components, "driver") {
+		go func(rc chan<- error) {
+			cmdArgs := buildConvoyCmdArgs(c, socket)
+			cmd := exec.Command("convoy", cmdArgs...)
+			logrus.Infof("Launching convoy with args: %s", cmdArgs)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err := cmd.Run()
+			logrus.Infof("convoy exited with error: %v", err)
+			rc <- err
+		}(resultChan)
+	}
 
-	go func(rc chan<- error) {
-		controlChan := make(chan bool, 1)
-		cattleClient, err := cattle.NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey)
-		if err != nil {
-			rc <- fmt.Errorf("Error getting cattle client: %v", err)
-		}
-		volAgent := NewVolumeAgent(socket, 1000, cattleClient, driver)
-		err = volAgent.Run(controlChan)
-		logrus.Infof("volume-agent exited with error: %v", err)
-		rc <- err
-	}(resultChan)
+	if strings.Contains(components, "agent") {
+		go func(rc chan<- error) {
+			controlChan := make(chan bool, 1)
+			cattleClient, err := cattle.NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey)
+			if err != nil {
+				rc <- fmt.Errorf("Error getting cattle client: %v", err)
+			}
+			volAgent := NewVolumeAgent(socket, 1000, cattleClient, driver)
+			err = volAgent.Run(controlChan)
+			logrus.Infof("volume-agent exited with error: %v", err)
+			rc <- err
+		}(resultChan)
+	}
 
 	<-resultChan
 	logrus.Info("Exiting.")

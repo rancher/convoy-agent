@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
 get_metadata() {
-    echo $(curl -s http://rancher-metadata/latest/self/service/metadata/$1)
+    echo $(curl -s http://rancher-metadata/2015-07-25/self/service/metadata/$1)
 }
 
 wait_for_metadata() {
@@ -23,7 +23,7 @@ wait_for_metadata() {
 storagepool_agent() {
     wait_for_metadata
 
-    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
+    STACK_NAME=$(curl -s http://rancher-metadata/2015-07-25/self/stack/name)
     CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
 
     exec convoy-agent \
@@ -37,9 +37,8 @@ storagepool_agent() {
 }
 
 common_vars() {
-    STACK_NAME=$(curl -s http://rancher-metadata/latest/self/stack/name)
-    STACK_UUID=$(curl -s http://rancher-metadata/latest/self/stack/uuid)
-    HOST_UUID=$(curl -s http://rancher-metadata/latest/self/host/uuid)
+    STACK_NAME=$(curl -s http://rancher-metadata/2015-07-25/self/stack/name)
+    STACK_UUID=$(curl -s http://rancher-metadata/2015-07-25/self/stack/uuid)
     CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
     CONVOY_SOCK_ON_HOST=/var/run/conoy-$STACK_NAME.sock
     CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
@@ -58,6 +57,7 @@ volume_agent_glusterfs() {
 }
 
 volume_agent_glusterfs_internal() {
+    wait_for_metadata
     common_vars
     GLUSTER_STACK_NAME=$(get_metadata gluster_stack)
     SERVICE_NAME=$(get_metadata gluster_service)
@@ -77,6 +77,61 @@ volume_agent_glusterfs_internal() {
         --convoy-drivers glusterfs \
         --convoy-driver-opts glusterfs.defaultvolumepool=$VOLUME_POOL \
         --convoy-driver-opts glusterfs.servers=glusterfs
+}
+
+volume_driver_longhorn() {
+    wait_for_metadata
+    common_vars
+    /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-driver-longhorn-internal "$@"
+}
+
+volume_agent_longhorn() {
+    wait_for_metadata
+    common_vars
+
+    exec convoy-agent \
+        --url $CATTLE_URL \
+        --access-key $CATTLE_ACCESS_KEY \
+        --secret-key $CATTLE_SECRET_KEY \
+        --storagepool-driver $STACK_NAME \
+        volume \
+        --socket $CONVOY_SOCK_IN_CON \
+        --convoy-root $CONVOY_ROOT \
+        --convoy-drivers longhorn \
+        --convoy-driver-opts "lh.rancherurl=$CATTLE_URL" \
+        --convoy-driver-opts "lh.rancheraccesskey=$CATTLE_ACCESS_KEY" \
+        --convoy-driver-opts "lh.ranchersecretkey=$CATTLE_SECRET_KEY" \
+        --components=agent
+        "$@"
+}
+
+volume_driver_longhorn_internal() {
+    wait_for_metadata
+    common_vars
+
+    mount --rbind /host/dev /dev
+
+    echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
+    if echo "$@" | grep -q convoy && [ -e $CONVOY_SOCK_IN_CON ]; then
+        rm $CONVOY_SOCK_IN_CON
+    fi
+    echo "unix://$CONVOY_SOCK_ON_HOST" > /etc/docker/plugins/$STACK_NAME.spec
+
+    exec convoy-agent \
+        --url $CATTLE_URL \
+        --access-key $CATTLE_ACCESS_KEY \
+        --secret-key $CATTLE_SECRET_KEY \
+        --storagepool-driver $STACK_NAME \
+        volume \
+        --socket $CONVOY_SOCK_IN_CON \
+        --convoy-root $CONVOY_ROOT \
+        --convoy-drivers longhorn \
+        --convoy-driver-opts "lh.rancherurl=$CATTLE_URL" \
+        --convoy-driver-opts "lh.rancheraccesskey=$CATTLE_ACCESS_KEY" \
+        --convoy-driver-opts "lh.ranchersecretkey=$CATTLE_SECRET_KEY" \
+        --convoy-ignore-docker-delete \
+        --components=driver
+        "$@"
 }
 
 volume_agent_nfs() {
@@ -117,23 +172,25 @@ volume_agent_nfs_internal() {
         --convoy-driver-opts vfs.path=$MNT_PT
 }
 
-case "$1" in
-    volume-agent-nfs)
-        volume_agent_nfs
-        ;;
-    volume-agent-nfs-internal)
-        volume_agent_nfs_internal
-        ;;
-    volume-agent-glusterfs)
-        volume_agent_glusterfs
-        ;;
-    volume-agent-glusterfs-internal)
-        volume_agent_glusterfs_internal
-        ;;
-    storagepool-agent)
-        storagepool_agent
-        ;;
-    *)
-        echo "Usage: $0 {volume-agent-glusterfs|volume-agent-nfs|storagepool-agent}"
-        exit 1
-esac
+valid_func() {
+    [ -n "$1" ] && declare -F | grep -q $cmd
+}
+
+valid_funcs() {
+    local funcs="storagepool-agent"
+    for i in $(declare -F | awk '{print $3}' | grep ^volume_agent); do
+        funcs="${funcs}|$(echo $i | sed 's/_/-/g')"
+    done
+    echo $funcs
+}
+
+cmd=$(echo $1 | sed 's/-/_/g')
+
+if ! valid_func "$@"; then
+    funcs=$(valid_funcs)
+    echo "Usage: $0 {${funcs}}"
+    exit 1
+fi
+
+shift 1
+$cmd "$@"
