@@ -39,7 +39,7 @@ func (mt *metadataBasedHealthCheck) populateHostMap() (map[string]string, error)
 	possibleServices := map[string]bool{}
 
 	for _, service := range stack.Services {
-		possibleServices[service] = true
+		possibleServices[service.Name] = true
 	}
 
 	possibleContainers := map[string]bool{}
@@ -47,7 +47,7 @@ func (mt *metadataBasedHealthCheck) populateHostMap() (map[string]string, error)
 	for _, service := range services {
 		if _, ok := possibleServices[service.Name]; ok && service.StackName == stackName {
 			for _, container := range service.Containers {
-				possibleContainers[container] = true
+				possibleContainers[container.Name] = true
 			}
 		}
 	}
