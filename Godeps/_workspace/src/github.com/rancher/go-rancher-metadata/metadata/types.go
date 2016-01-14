@@ -1,25 +1,27 @@
 package metadata
 
 type Stack struct {
-	EnvironmentName string   `json:"environment_name"`
-	Name            string   `json:"name"`
-	Services        []string `json:"services"`
+	EnvironmentName string    `json:"environment_name"`
+	Name            string    `json:"name"`
+	Services        []Service `json:"services"`
 }
 
 type Service struct {
-	Name        string            `json:"name"`
-	StackName   string            `json:"stack_name"`
-	Kind        string            `json:"kind"`
-	Hostname    string            `json:"hostname"`
-	Vip         string            `json:"vip"`
-	CreateIndex string            `json:"create_index"`
-	ExternalIps []string          `json:"external_ips"`
-	Sidekicks   []string          `json:"sidekicks"`
-	Containers  []string          `json:"containers"`
-	Ports       []string          `json:"ports"`
-	Labels      map[string]string `json:"labels"`
-	Links       map[string]string `json:"links"`
-	Metadata    map[string]string `json:"metadata"`
+	Scale       int                    `json:"scale"`
+	Name        string                 `json:"name"`
+	StackName   string                 `json:"stack_name"`
+	Kind        string                 `json:"kind"`
+	Hostname    string                 `json:"hostname"`
+	Vip         string                 `json:"vip"`
+	CreateIndex int                    `json:"create_index"`
+	UUID        string                 `json:"uuid"`
+	ExternalIps []string               `json:"external_ips"`
+	Sidekicks   []string               `json:"sidekicks"`
+	Containers  []Container            `json:"containers"`
+	Ports       []string               `json:"ports"`
+	Labels      map[string]string      `json:"labels"`
+	Links       map[string]string      `json:"links"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type Container struct {
@@ -32,6 +34,7 @@ type Container struct {
 	Labels      map[string]string `json:"labels"`
 	CreateIndex int               `json:"create_index"`
 	HostUUID    string            `json:"host_uuid"`
+	UUID        string            `json:"uuid"`
 }
 
 type Host struct {

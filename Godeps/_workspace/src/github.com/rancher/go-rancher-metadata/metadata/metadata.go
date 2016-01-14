@@ -15,6 +15,16 @@ func NewClient(url string) *Client {
 	return &Client{url}
 }
 
+func NewClientAndWait(url string) (*Client, error) {
+	client := &Client{url}
+
+	if err := testConnection(client); err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
 func (m *Client) SendRequest(path string) ([]byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", m.url+path, nil)
@@ -23,6 +33,11 @@ func (m *Client) SendRequest(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error %v accessing %v path", resp.StatusCode, path)
+	}
+
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -51,6 +66,34 @@ func (m *Client) GetSelfContainer() (Container, error) {
 	}
 
 	return container, nil
+}
+
+func (m *Client) GetSelfServiceByName(name string) (Service, error) {
+	resp, err := m.SendRequest("/self/stack/services/" + name)
+	var service Service
+	if err != nil {
+		return service, err
+	}
+
+	if err = json.Unmarshal(resp, &service); err != nil {
+		return service, err
+	}
+
+	return service, nil
+}
+
+func (m *Client) GetSelfService() (Service, error) {
+	resp, err := m.SendRequest("/self/service")
+	var service Service
+	if err != nil {
+		return service, err
+	}
+
+	if err = json.Unmarshal(resp, &service); err != nil {
+		return service, err
+	}
+
+	return service, nil
 }
 
 func (m *Client) GetSelfStack() (Stack, error) {
@@ -91,6 +134,22 @@ func (m *Client) GetContainers() ([]Container, error) {
 		return containers, err
 	}
 	return containers, nil
+}
+
+func (m *Client) GetServiceContainers(serviceName string, stackName string) ([]Container, error) {
+	var serviceContainers = []Container{}
+	containers, err := m.GetContainers()
+	if err != nil {
+		return serviceContainers, err
+	}
+
+	for _, container := range containers {
+		if container.StackName == stackName && container.ServiceName == serviceName {
+			serviceContainers = append(serviceContainers, container)
+		}
+	}
+
+	return serviceContainers, nil
 }
 
 func (m *Client) GetHosts() ([]Host, error) {
