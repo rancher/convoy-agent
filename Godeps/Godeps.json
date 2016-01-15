@@ -1,6 +1,9 @@
 {
 	"ImportPath": "github.com/rancher/convoy-agent",
-	"GoVersion": "go1.5.2",
+	"GoVersion": "go1.4.1",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -52,6 +55,10 @@
 		{
 			"ImportPath": "github.com/rancher/kubernetes-agent/healthcheck",
 			"Rev": "ebc4233b0edaf878b9a891cf0350de6e85fe1777"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "11d3bc7aa68e238947792f30573146a3231fc0f1"
 		}
 	]
 }
