@@ -1,9 +1,10 @@
 package tests
 
 import (
-	"os"
 	"testing"
 	"time"
+
+	"gopkg.in/check.v1"
 
 	"github.com/rancher/convoy-agent/storagepool"
 	"github.com/rancher/go-rancher-metadata/metadata"
@@ -13,52 +14,24 @@ var (
 	hcMetadataType = "metadata"
 )
 
-func TestMain(m *testing.M) {
+// Hook up gocheck into the "go test" runner.
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
+
+type MetadataTestSuite struct {
+}
+
+var _ = check.Suite(&MetadataTestSuite{})
+
+func (s *MetadataTestSuite) SetUpSuite(c *check.C) {
 	go startMetadataServer()
-	os.Exit(m.Run())
+	time.Sleep(time.Millisecond * 200)
 }
 
-func TestReadsHostsCorrectly(t *testing.T) {
-	tc := &testCattleClient{}
-
-	stack := metadata.Stack{
-		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service2",
-		},
-	}
-	setSelfStack(stack)
-
-	services := []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	setServices(services)
-
-	containers := []metadata.Container{
+var service1 = metadata.Service{
+	Name: "service1",
+	Containers: []metadata.Container{
 		{
 			Name:        "container1",
 			ServiceName: "service1",
@@ -71,649 +44,219 @@ func TestReadsHostsCorrectly(t *testing.T) {
 			StackName:   "test_stack1",
 			HostUUID:    "hostUuid2",
 		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-		{
-			Name:        "container5",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid5",
-		},
-		{
-			Name:        "container6",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid6",
-		},
-	}
-	setContainers(containers)
-
-	go func() {
-		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
-		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
-		if err != nil {
-			t.Fatalf("Error starting storagepool agent [%v]", err)
-		}
-	}()
-	time.Sleep(200 * time.Millisecond)
-
-	uuids := tc.getLastSync()
-	if len(uuids) != 2 {
-		t.Fatalf("expected 2 storagepool sync events, but received [%d] %v", len(uuids), uuids)
-	}
-
-	uuid1found := false
-	uuid2found := false
-
-	for _, uuid := range uuids {
-		if uuid == "hostUuid1" {
-			uuid1found = true
-		}
-		if uuid == "hostUuid2" {
-			uuid2found = true
-		}
-	}
-
-	if !uuid1found || !uuid2found {
-		t.Fatalf("sync event not as expected, received %v", uuids)
-	}
-
+	},
+	StackName: "test_stack1",
 }
 
-func TestDetectsVersionChange(t *testing.T) {
+func (s *MetadataTestSuite) TestReadsHostsCorrectly(c *check.C) {
 	tc := &testCattleClient{}
+
 	stack := metadata.Stack{
 		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service2",
+		Services: []metadata.Service{
+			service1,
+			{
+				Name: "service2",
+			},
 		},
 	}
 	setSelfStack(stack)
 
-	services := []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	setServices(services)
-
-	containers := []metadata.Container{
-		{
-			Name:        "container1",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid1",
-		},
-		{
-			Name:        "container2",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid2",
-		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-		{
-			Name:        "container5",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid5",
-		},
-		{
-			Name:        "container6",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid6",
-		},
-	}
-	setContainers(containers)
 	go func() {
 		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
-		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
+		err := spAgent.Run("http://localhost" + metadataUrl + "/mock-12-19-2015")
 		if err != nil {
-			t.Fatalf("Error starting storagepool agent [%v]", err)
+			c.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
 	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
-	if len(uuids) != 2 {
-		t.Fatalf("expected 2 storagepool sync events, but received [%d] %v", len(uuids), uuids)
-	}
-
-	uuid1found := false
-	uuid2found := false
-
+	actual := map[string]bool{}
 	for _, uuid := range uuids {
-		if uuid == "hostUuid1" {
-			uuid1found = true
-		}
-		if uuid == "hostUuid2" {
-			uuid2found = true
-		}
+		actual[uuid] = true
 	}
+	c.Assert(actual, check.DeepEquals, map[string]bool{
+		"hostUuid1": true,
+		"hostUuid2": true,
+	})
+}
 
-	if !uuid1found || !uuid2found {
-		t.Fatalf("sync event not as expected, received %v", uuids)
+func (s *MetadataTestSuite) TestDetectsVersionChange(c *check.C) {
+	tc := &testCattleClient{}
+	stack := metadata.Stack{
+		Name: "test_stack1",
+		Services: []metadata.Service{
+			service1,
+		},
 	}
+	setSelfStack(stack)
+
+	go func() {
+		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
+		err := spAgent.Run("http://localhost" + metadataUrl + "/mock-12-19-2015")
+		if err != nil {
+			c.Fatalf("Error starting storagepool agent [%v]", err)
+		}
+	}()
+	time.Sleep(200 * time.Millisecond)
+
+	uuids := tc.getLastSync()
+	actual := map[string]bool{}
+	for _, uuid := range uuids {
+		actual[uuid] = true
+	}
+	c.Assert(actual, check.DeepEquals, map[string]bool{
+		"hostUuid1": true,
+		"hostUuid2": true,
+	})
 
 	stack = metadata.Stack{
 		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service3",
+		Services: []metadata.Service{
+			service1,
+			{
+				Name: "service3",
+				Containers: []metadata.Container{
+					{
+						Name:        "container5",
+						ServiceName: "service3",
+						StackName:   "test_stack1",
+						HostUUID:    "hostUuid5",
+					},
+					{
+						Name:        "container6",
+						ServiceName: "service3",
+						StackName:   "test_stack1",
+						HostUUID:    "hostUuid6",
+					},
+				},
+				StackName: "test_stack1",
+			},
 		},
 	}
 	setSelfStack(stack)
-
-	services = []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	setServices(services)
-
-	containers = []metadata.Container{
-		{
-			Name:        "container1",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid1",
-		},
-		{
-			Name:        "container2",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid2",
-		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-		{
-			Name:        "container5",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid5",
-		},
-		{
-			Name:        "container6",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid6",
-		},
-	}
-	setContainers(containers)
 	time.Sleep(2 * time.Second)
 
 	uuids = tc.getLastSync()
-	if len(uuids) != 4 {
-		t.Fatalf("expected 4 storagepool sync events, but received [%d] %v", len(uuids), uuids)
-	}
-
-	uuid1found = false
-	uuid2found = false
-	uuid3found := false
-	uuid4found := false
-
+	actual = map[string]bool{}
 	for _, uuid := range uuids {
-		if uuid == "hostUuid1" {
-			uuid1found = true
-		}
-		if uuid == "hostUuid2" {
-			uuid2found = true
-		}
-		if uuid == "hostUuid5" {
-			uuid3found = true
-		}
-		if uuid == "hostUuid6" {
-			uuid4found = true
-		}
+		actual[uuid] = true
 	}
-
-	if !uuid1found || !uuid2found || !uuid3found || !uuid4found {
-		t.Fatalf("sync event not as expected, received %v", uuids)
-	}
+	c.Assert(actual, check.DeepEquals, map[string]bool{
+		"hostUuid1": true,
+		"hostUuid2": true,
+		"hostUuid5": true,
+		"hostUuid6": true,
+	})
 }
 
-func TestNoVersionChange(t *testing.T) {
+func (s *MetadataTestSuite) TestNoVersionChange(c *check.C) {
 	tc := &testCattleClient{}
 	stack := metadata.Stack{
 		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service2",
+		Services: []metadata.Service{
+			service1,
+			{
+				Name: "service2",
+			},
 		},
 	}
 	setSelfStack(stack)
 
-	services := []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	setServices(services)
-
-	containers := []metadata.Container{
-		{
-			Name:        "container1",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid1",
-		},
-		{
-			Name:        "container2",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid2",
-		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-		{
-			Name:        "container5",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid5",
-		},
-		{
-			Name:        "container6",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid6",
-		},
-	}
-	setContainers(containers)
 	go func() {
 		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
-		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
+		err := spAgent.Run("http://localhost" + metadataUrl + "/mock-12-19-2015")
 		if err != nil {
-			t.Fatalf("Error starting storagepool agent [%v]", err)
+			c.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
 	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
-	if len(uuids) != 2 {
-		t.Fatalf("expected 2 storagepool sync events, but received [%d] %v", len(uuids), uuids)
-	}
-
-	uuid1found := false
-	uuid2found := false
-
+	actual := map[string]bool{}
 	for _, uuid := range uuids {
-		if uuid == "hostUuid1" {
-			uuid1found = true
-		}
-		if uuid == "hostUuid2" {
-			uuid2found = true
-		}
+		actual[uuid] = true
 	}
-
-	if !uuid1found || !uuid2found {
-		t.Fatalf("sync event not as expected, received %v", uuids)
-	}
+	c.Assert(actual, check.DeepEquals, map[string]bool{
+		"hostUuid1": true,
+		"hostUuid2": true,
+	})
 
 	stack = metadata.Stack{
 		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service3",
+		Services: []metadata.Service{
+			service1,
 		},
 	}
-	selfStack = stack
+	setSelfStack(stack)
 
-	newServices := []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	services = newServices
-
-	newContainers := []metadata.Container{
-		{
-			Name:        "container1",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid1",
-		},
-		{
-			Name:        "container2",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid2",
-		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-		{
-			Name:        "container5",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid5",
-		},
-		{
-			Name:        "container6",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid6",
-		},
-	}
-	containers = newContainers
 	time.Sleep(10 * time.Second)
 
 	uuids = tc.getLastSync()
-	if len(uuids) != 0 {
-		t.Fatalf("expected 0 storagepool sync events, but received [%d] %v", len(uuids), uuids)
-	}
-
+	c.Assert(len(uuids), check.Equals, 0)
 }
 
-func TestVersionChangeAndDeletion(t *testing.T) {
+func (s *MetadataTestSuite) TestVersionChangeAndDeletion(c *check.C) {
 	tc := &testCattleClient{}
 	stack := metadata.Stack{
 		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service2",
+		Services: []metadata.Service{
+			service1,
 		},
 	}
 	setSelfStack(stack)
 
-	services := []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	setServices(services)
-
-	containers := []metadata.Container{
-		{
-			Name:        "container1",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid1",
-		},
-		{
-			Name:        "container2",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid2",
-		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-		{
-			Name:        "container5",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid5",
-		},
-		{
-			Name:        "container6",
-			ServiceName: "service3",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid6",
-		},
-	}
-	setContainers(containers)
 	go func() {
 		spAgent := storagepool.NewStoragepoolAgent(100, ".root", "1234567890", tc)
-		err := spAgent.Run("http://localhost" + metadataUrl + "/07-25-2015")
+		err := spAgent.Run("http://localhost" + metadataUrl + "/mock-12-19-2015")
 		if err != nil {
-			t.Fatalf("Error starting storagepool agent [%v]", err)
+			c.Fatalf("Error starting storagepool agent [%v]", err)
 		}
 	}()
 	time.Sleep(200 * time.Millisecond)
 
 	uuids := tc.getLastSync()
-	if len(uuids) != 2 {
-		t.Fatalf("expected 2 storagepool sync events, but received [%d] %v", len(uuids), uuids)
-	}
-
-	uuid1found := false
-	uuid2found := false
-
+	actual := map[string]bool{}
 	for _, uuid := range uuids {
-		if uuid == "hostUuid1" {
-			uuid1found = true
-		}
-		if uuid == "hostUuid2" {
-			uuid2found = true
-		}
+		actual[uuid] = true
 	}
-
-	if !uuid1found || !uuid2found {
-		t.Fatalf("sync event not as expected, received %v", uuids)
-	}
+	c.Assert(actual, check.DeepEquals, map[string]bool{
+		"hostUuid1": true,
+		"hostUuid2": true,
+	})
 
 	stack = metadata.Stack{
 		Name: "test_stack1",
-		Services: []string{
-			"service1",
-			"service3",
+		Services: []metadata.Service{
+			{
+				Name: "service1",
+				Containers: []metadata.Container{
+					{
+						Name:        "container1",
+						ServiceName: "service1",
+						StackName:   "test_stack1",
+						HostUUID:    "hostUuid1",
+					},
+				},
+				StackName: "test_stack1",
+			},
+			{
+				Name:       "service3",
+				Containers: []metadata.Container{},
+				StackName:  "test_stack1",
+			},
 		},
 	}
 	setSelfStack(stack)
-
-	newServices := []metadata.Service{
-		{
-			Name: "service1",
-			Containers: []string{
-				"container1",
-				"container2",
-			},
-			StackName: "test_stack1",
-		},
-		{
-			Name: "service2",
-			Containers: []string{
-				"container3",
-				"container4",
-			},
-			StackName: "test_stack2",
-		},
-		{
-			Name: "service3",
-			Containers: []string{
-				"container5",
-				"container6",
-			},
-			StackName: "test_stack1",
-		},
-	}
-	setServices(newServices)
-
-	newContainers := []metadata.Container{
-		{
-			Name:        "container1",
-			ServiceName: "service1",
-			StackName:   "test_stack1",
-			HostUUID:    "hostUuid1",
-		},
-		{
-			Name:        "container3",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid3",
-		},
-		{
-			Name:        "container4",
-			ServiceName: "service2",
-			StackName:   "test_stack2",
-			HostUUID:    "hostUuid4",
-		},
-	}
-	setContainers(newContainers)
 	time.Sleep(2 * time.Second)
 
 	uuids = tc.getLastSync()
-	if len(uuids) != 1 {
-		t.Fatalf("expected 0 storagepool sync events, but received [%d] %v", len(uuids), uuids)
+	actual = map[string]bool{}
+	for _, uuid := range uuids {
+		actual[uuid] = true
 	}
-
-	if uuids[0] != "hostUuid1" {
-		t.Fatalf("sync event on delete does not work")
-	}
-
+	c.Assert(actual, check.DeepEquals, map[string]bool{
+		"hostUuid1": true,
+	})
 }

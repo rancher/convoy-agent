@@ -21,19 +21,18 @@ var (
 
 func startMetadataServer() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/07-25-2015/version", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/mock-12-19-2015/version", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "%d", version)
 	})
-	mux.HandleFunc("/07-25-2015/self/stack", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/mock-12-19-2015/self/stack", func(w http.ResponseWriter, req *http.Request) {
 		stackString, err := json.Marshal(selfStack)
 		if err != nil {
 			http.Error(w, "Could not marshall self/stack", 500)
 			return
 		}
-		log.Error(string(stackString))
 		fmt.Fprintf(w, string(stackString))
 	})
-	mux.HandleFunc("/07-25-2015/services", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/mock-12-19-2015/services", func(w http.ResponseWriter, req *http.Request) {
 		servicesString, err := json.Marshal(services)
 		if err != nil {
 			http.Error(w, "Could not marshall services", 500)
@@ -41,7 +40,7 @@ func startMetadataServer() {
 		}
 		fmt.Fprintf(w, string(servicesString))
 	})
-	mux.HandleFunc("/07-25-2015/containers", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/mock-12-19-2015/containers", func(w http.ResponseWriter, req *http.Request) {
 		containerString, err := json.Marshal(containers)
 		if err != nil {
 			http.Error(w, "Could not marshall containers", 500)

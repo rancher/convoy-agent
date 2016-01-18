@@ -7,17 +7,17 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7-53-g446d1c1",
-			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
+			"Comment": "v0.7.3-2-g26709e2",
+			"Rev": "26709e2714106fb8ad40b773b711ebce25b78914"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
-			"Comment": "1.2.0-137-gbca61c4",
-			"Rev": "bca61c476e3c752594983e4c9bcd5f62fb09f157"
+			"Comment": "1.2.0-66-g6086d79",
+			"Rev": "6086d7927ec35315964d9fea46df6c04e6d697c1"
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
-			"Rev": "c66b764651cdca39f42d263b07a507c6e8b58ee9"
+			"Rev": "1551221275a7bd42978745a376b2531f791d88f3"
 		},
 		{
 			"ImportPath": "github.com/mitchellh/mapstructure",
@@ -25,32 +25,32 @@
 		},
 		{
 			"ImportPath": "github.com/rancher/convoy/api",
-			"Comment": "v0.4-10-gb45f61f",
-			"Rev": "b45f61f9283ab5d8d8e92c11625b744ae5e393e4"
+			"Comment": "0.4.2-rc1-5-g78cc0a4",
+			"Rev": "78cc0a4af9ffc0ad1e74eb916c823daf8d7cc09f"
 		},
 		{
 			"ImportPath": "github.com/rancher/convoy/client/flags",
-			"Comment": "v0.4-10-gb45f61f",
-			"Rev": "b45f61f9283ab5d8d8e92c11625b744ae5e393e4"
+			"Comment": "0.4.2-rc1-5-g78cc0a4",
+			"Rev": "78cc0a4af9ffc0ad1e74eb916c823daf8d7cc09f"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-machine-service/events",
-			"Comment": "v0.23.0",
-			"Rev": "4c789a5b6ac0035e795ecc5071e5faeafad2296e"
+			"Comment": "v0.24.0",
+			"Rev": "5023ae491db0a92cde803c7a6f71d0aef514159b"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-machine-service/locks",
-			"Comment": "v0.23.0",
-			"Rev": "4c789a5b6ac0035e795ecc5071e5faeafad2296e"
+			"Comment": "v0.24.0",
+			"Rev": "5023ae491db0a92cde803c7a6f71d0aef514159b"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-rancher-metadata/metadata",
-			"Rev": "e57bb2cbdf6ce811818d1aeeae75f75d18a5182e"
+			"Rev": "593dcecf7122b25df7ad5d0d3d73fdbcc8bee3be"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-rancher/client",
-			"Comment": "v0.1.0-98-g595a411",
-			"Rev": "595a41161f4340fab2156d07507458f02b5c9a33"
+			"Comment": "v0.1.0-128-ga1a6017",
+			"Rev": "a1a60172da70a2d3f324da3b0c392b79f75fb91b"
 		},
 		{
 			"ImportPath": "github.com/rancher/kubernetes-agent/healthcheck",

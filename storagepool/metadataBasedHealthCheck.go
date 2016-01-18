@@ -29,39 +29,10 @@ func (mt *metadataBasedHealthCheck) populateHostMap() (map[string]string, error)
 	if err != nil {
 		return nil, err
 	}
-	stackName := stack.Name
 
-	services, err := m.GetServices()
-	if err != nil {
-		return nil, err
-	}
-
-	possibleServices := map[string]bool{}
-
-	for _, service := range stack.Services {
-		possibleServices[service] = true
-	}
-
-	possibleContainers := map[string]bool{}
-
-	for _, service := range services {
-		if _, ok := possibleServices[service.Name]; ok && service.StackName == stackName {
-			for _, container := range service.Containers {
-				possibleContainers[container] = true
-			}
-		}
-	}
-
-	containers, err := m.GetContainers()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, container := range containers {
-		_, okc := possibleContainers[container.Name]
-		_, oks := possibleServices[container.ServiceName]
-		if okc && container.StackName == stackName && oks {
-			activeHosts[container.HostUUID] = timeStamp
+	for _, svc := range stack.Services {
+		for _, c := range svc.Containers {
+			activeHosts[c.HostUUID] = timeStamp
 		}
 	}
 
