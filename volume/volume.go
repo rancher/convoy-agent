@@ -70,7 +70,7 @@ func init() {
 
 func volumeAgent(c *cli.Context) {
 	socket := c.GlobalString("socket")
-	components := c.GlobalString("components")
+	components := c.String("components")
 	cattleUrl := c.GlobalString("url")
 	cattleAccessKey := c.GlobalString("access-key")
 	cattleSecretKey := c.GlobalString("secret-key")

@@ -14,17 +14,19 @@ wait_for_metadata() {
         sleep 3
         counter=$((counter + 1))
         if [ "$counter" -gt 10 ]; then
+            echo
             echo "Could not reach metadata." >&2
             exit 1
         fi
     done
+    echo
 }
 
 storagepool_agent() {
     wait_for_metadata
 
     STACK_NAME=$(curl -s http://rancher-metadata/2015-07-25/self/stack/name)
-    CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
+    CONVOY_SOCK_IN_CON=/host/var/run/convoy-$STACK_NAME.sock
 
     exec convoy-agent \
         -d \
@@ -39,8 +41,8 @@ storagepool_agent() {
 common_vars() {
     STACK_NAME=$(curl -s http://rancher-metadata/2015-07-25/self/stack/name)
     STACK_UUID=$(curl -s http://rancher-metadata/2015-07-25/self/stack/uuid)
-    CONVOY_SOCK_IN_CON=/host/var/run/conoy-$STACK_NAME.sock
-    CONVOY_SOCK_ON_HOST=/var/run/conoy-$STACK_NAME.sock
+    CONVOY_SOCK_IN_CON=/host/var/run/convoy-$STACK_NAME.sock
+    CONVOY_SOCK_ON_HOST=/var/run/convoy-$STACK_NAME.sock
     CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
 }
 
@@ -79,23 +81,28 @@ volume_agent_glusterfs_internal() {
         --convoy-driver-opts glusterfs.servers=glusterfs
 }
 
+longhorn_common_vars() {
+    common_vars
+    CONVOY_ROOT=/var/lib/rancher/convoy/longhorn
+}
+
 volume_driver_longhorn() {
     wait_for_metadata
-    common_vars
+    longhorn_common_vars
     /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-driver-longhorn-internal "$@"
 }
 
 volume_agent_longhorn() {
     wait_for_metadata
-    common_vars
+    longhorn_common_vars
 
     exec convoy-agent \
         --url $CATTLE_URL \
         --access-key $CATTLE_ACCESS_KEY \
         --secret-key $CATTLE_SECRET_KEY \
         --storagepool-driver $STACK_NAME \
-        volume \
         --socket $CONVOY_SOCK_IN_CON \
+        volume \
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers longhorn \
         --convoy-driver-opts "lh.rancherurl=$CATTLE_URL" \
@@ -107,7 +114,7 @@ volume_agent_longhorn() {
 
 volume_driver_longhorn_internal() {
     wait_for_metadata
-    common_vars
+    longhorn_common_vars
 
     mount --rbind /host/dev /dev
 
@@ -122,8 +129,8 @@ volume_driver_longhorn_internal() {
         --access-key $CATTLE_ACCESS_KEY \
         --secret-key $CATTLE_SECRET_KEY \
         --storagepool-driver $STACK_NAME \
-        volume \
         --socket $CONVOY_SOCK_IN_CON \
+        volume \
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers longhorn \
         --convoy-driver-opts "lh.rancherurl=$CATTLE_URL" \
@@ -165,8 +172,8 @@ volume_agent_nfs_internal() {
         --access-key $CATTLE_ACCESS_KEY \
         --secret-key $CATTLE_SECRET_KEY \
         --storagepool-driver $STACK_NAME \
-        volume \
         --socket $CONVOY_SOCK_IN_CON \
+        volume \
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers vfs \
         --convoy-driver-opts vfs.path=$MNT_PT

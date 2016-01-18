@@ -16,7 +16,7 @@ var Commands = []cli.Command{
 			cli.StringFlag{
 				Name:  "storagepool-metadata-url",
 				Usage: "set the metadata url",
-				Value: "http://rancher-metadata/2015-07-25",
+				Value: "http://rancher-metadata/2015-12-19",
 			},
 		},
 		Action:    start,
