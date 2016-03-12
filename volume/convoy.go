@@ -3,11 +3,9 @@ package volume
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/rancher/convoy/api"
@@ -59,15 +57,18 @@ func (client *ConvoyClient) GetCurrVolumes() (Volume, error) {
 	return volumes, err
 }
 
-func (client *ConvoyClient) DeleteVolume(uuid string) error {
+func (client *ConvoyClient) DeleteVolume(name string) error {
 	reqBody, err := json.Marshal(api.VolumeDeleteRequest{
-		VolumeUUID: uuid,
+		VolumeName: name,
 	})
 	if err != nil {
 		return err
 	}
 
 	err = client.doRequest("DELETE", "/v1/volumes/", reqBody, nil)
+	if isNotFoundError(err) {
+		return nil
+	}
 	return err
 }
 
@@ -84,17 +85,20 @@ func (client *ConvoyClient) CreateVolume(name string) error {
 	return err
 }
 
-func (client *ConvoyClient) GetUUID(name string) (string, error) {
-	v := url.Values{}
-	v.Set(api.KEY_NAME, name)
-
-	uuidResponse := &api.UUIDResponse{}
-	err := client.doRequest("GET", "/uuid?"+v.Encode(), nil, uuidResponse)
+func (client *ConvoyClient) GetVolume(name string) (*api.VolumeResponse, error) {
+	reqBody, err := json.Marshal(api.VolumeInspectRequest{
+		VolumeName: name,
+	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return uuidResponse.UUID, nil
+	vol := &api.VolumeResponse{}
+	err = client.doRequest("GET", "/v1/volumes/", reqBody, vol)
+	if isNotFoundError(err) {
+		return nil, nil
+	}
+	return vol, err
 }
 
 func (client *ConvoyClient) doRequest(method string, path string, body []byte, respTarget interface{}) error {
@@ -123,7 +127,10 @@ func (client *ConvoyClient) doRequest(method string, path string, body []byte, r
 			return err
 		}
 
-		return fmt.Errorf("Bad response: Code: %v. Response body: %s", resp.StatusCode, respBody)
+		return APIResponseError{
+			ErrorMessage: string(respBody),
+			StatusCode:   resp.StatusCode,
+		}
 	}
 
 	if respTarget != nil {
@@ -133,4 +140,20 @@ func (client *ConvoyClient) doRequest(method string, path string, body []byte, r
 	}
 
 	return nil
+}
+
+type APIResponseError struct {
+	ErrorMessage string
+	StatusCode   int
+}
+
+func (e APIResponseError) Error() string {
+	return e.ErrorMessage
+}
+
+func isNotFoundError(err error) bool {
+	if apiErr, ok := err.(APIResponseError); ok {
+		return apiErr.StatusCode == http.StatusNotFound
+	}
+	return false
 }

@@ -39,7 +39,7 @@ func NewCattleClient(cattleUrl, cattleAccessKey, cattleSecretKey string) (*Cattl
 }
 
 func (c *CattleClient) CreateVolume(driver string, vol api.VolumeResponse) error {
-	log.Debugf("create event %s", vol.UUID)
+	log.Debugf("create event %s", vol.Name)
 	eveResource := c.processVolume("volume.create", driver, vol)
 	_, err := c.rancherClient.ExternalVolumeEvent.Create(eveResource)
 	return err
@@ -61,7 +61,7 @@ func (c *CattleClient) processVolume(event, driver string, vol api.VolumeRespons
 }
 
 func (c *CattleClient) DeleteVolume(driver string, vol api.VolumeResponse) error {
-	log.Debugf("delete event %s", vol.UUID)
+	log.Debugf("delete event %s", vol.Name)
 	eveResource := c.processVolume("volume.delete", driver, vol)
 	_, err := c.rancherClient.ExternalVolumeEvent.Create(eveResource)
 	return err

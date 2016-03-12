@@ -51,16 +51,16 @@ func (v *VolumeAgent) Run(controlChan chan bool) error {
 		for _, vol := range deletedVols {
 			err := v.cattleClient.DeleteVolume(v.driver, vol)
 			if err != nil {
-				log.Errorf("Error sending delete event for volume ID=[%s] err=[%v]", vol.UUID, err)
-				currVols[vol.UUID] = vols[vol.UUID]
+				log.Errorf("Error sending delete event for volume name=[%s] err=[%v]", vol.Name, err)
+				currVols[vol.Name] = vols[vol.Name]
 			}
 		}
 
 		for _, vol := range createdVols {
 			err := v.cattleClient.CreateVolume(v.driver, vol)
 			if err != nil {
-				log.Errorf("Error sending create event for volume ID=[%s] err=[%v]", vol.UUID, err)
-				delete(currVols, vol.UUID)
+				log.Errorf("Error sending create event for volume name=[%s] err=[%v]", vol.Name, err)
+				delete(currVols, vol.Name)
 			}
 		}
 		vols = currVols

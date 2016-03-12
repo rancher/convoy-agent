@@ -21,8 +21,7 @@ install_convoy()
 {
 	tmpdir=$(mktemp -d)
 	pushd $tmpdir
-	CONVOY_VERSION="v0.3"
-	curl -sSL -o convoy.tar.gz https://github.com/rancher/convoy/releases/download/${CONVOY_VERSION}/convoy.tar.gz
+	curl -sSL -o convoy.tar.gz https://github.com/rancher/convoy/releases/download/v0.4.4-rc2/convoy.tar.gz
 	tar -xzvf convoy.tar.gz && cp ./convoy/convoy /usr/bin
 	popd
 	rm -rf ${tmpdir}
