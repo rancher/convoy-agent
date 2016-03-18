@@ -58,7 +58,7 @@ func createVolume(name string) (string, error) {
 
 func deleteVolume(name string) (string, error) {
 	inp := &api.VolumeDeleteRequest{
-		VolumeUUID: name,
+		VolumeName: name,
 	}
 	reqString, err := json.Marshal(inp)
 	if err != nil {

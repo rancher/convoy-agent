@@ -50,19 +50,19 @@ func (h *volumeRemoveHandler) Handler(event *revents.Event, cli *client.RancherC
 	if err != nil {
 		return fmt.Errorf("Cannot parse event. Error: %v", err)
 	}
-	volume := data.VSPM.V
-	uuid, err := h.convoyClient.GetUUID(volume.Name)
+	rancherVol := data.VSPM.V
+	vol, err := h.convoyClient.GetVolume(rancherVol.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("Cannot delete volume %v. Name: %v. Error: %v", rancherVol.Id, rancherVol.Name, err)
 	}
 
-	if uuid == "" {
-		log.Infof("Couldn't find volume with name %v. Nothing to delete.", volume.Name)
-	} else {
-		err = h.convoyClient.DeleteVolume(uuid)
-		if err != nil {
-			return fmt.Errorf("Cannot delete volume %v. Name: %v. Error: %v", volume.Id, volume.Name, err)
-		}
+	if vol == nil {
+		return volumeReply(event, cli)
+	}
+
+	err = h.convoyClient.DeleteVolume(rancherVol.Name)
+	if err != nil {
+		return fmt.Errorf("Cannot delete volume %v. Name: %v. Error: %v", rancherVol.Id, rancherVol.Name, err)
 	}
 
 	return volumeReply(event, cli)

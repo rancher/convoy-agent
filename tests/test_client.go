@@ -12,12 +12,12 @@ type testCattleClient struct {
 }
 
 func (t *testCattleClient) CreateVolume(driver string, vol api.VolumeResponse) error {
-	t.lastEvents = append(t.lastEvents, fmt.Sprintf("CREATED_%s", vol.UUID))
+	t.lastEvents = append(t.lastEvents, fmt.Sprintf("CREATED_%s", vol.Name))
 	return nil
 }
 
 func (t *testCattleClient) DeleteVolume(driver string, vol api.VolumeResponse) error {
-	t.lastEvents = append(t.lastEvents, fmt.Sprintf("DELETED_%s", vol.UUID))
+	t.lastEvents = append(t.lastEvents, fmt.Sprintf("DELETED_%s", vol.Name))
 	return nil
 }
 

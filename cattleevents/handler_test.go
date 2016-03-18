@@ -92,12 +92,6 @@ func (s *TestSuite) TestVolumeDelete(c *check.C) {
 	c.Assert(pub.PreviousIds, check.DeepEquals, []string{"event-id-1"})
 	c.Assert(len(pub.Data), check.Equals, 0)
 
-	uuid, err := convoyClient.GetUUID(name)
-	if err != nil {
-		c.Fatal(err)
-	}
-	c.Assert(uuid, check.Equals, "")
-
 	// Assert that the event running a second time does not fail.
 	err = handler.Handler(event, s.mockRClient)
 	if err != nil {

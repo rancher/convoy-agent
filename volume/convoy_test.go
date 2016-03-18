@@ -49,11 +49,7 @@ func (s *TestSuite) TestVolumeDelete(c *check.C) {
 	if !found {
 		c.Fatalf("Volume %v was not created.", name)
 	}
-	uuid, err := convoyClient.GetUUID(name)
-	if err != nil {
-		c.Fatal(err)
-	}
-	err = convoyClient.DeleteVolume(uuid)
+	err = convoyClient.DeleteVolume(name)
 	if err != nil {
 		c.Fatal(err)
 	}
