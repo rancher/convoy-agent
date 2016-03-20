@@ -25,13 +25,13 @@
 		},
 		{
 			"ImportPath": "github.com/rancher/convoy/api",
-			"Comment": "v0.4.3-41-gffd9a41",
-			"Rev": "ffd9a41520b0cdbd206ca31649394d0b5cb0a47e"
+			"Comment": "v0.5.0.2-rancher-1-g690f170",
+			"Rev": "690f170961f007b02bc48e0cbe98d7335085386e"
 		},
 		{
 			"ImportPath": "github.com/rancher/convoy/client/flags",
-			"Comment": "v0.4.3-41-gffd9a41",
-			"Rev": "ffd9a41520b0cdbd206ca31649394d0b5cb0a47e"
+			"Comment": "v0.5.0.2-rancher-1-g690f170",
+			"Rev": "690f170961f007b02bc48e0cbe98d7335085386e"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-machine-service/events",

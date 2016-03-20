@@ -183,6 +183,7 @@ volume_agent_nfs_internal() {
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers vfs \
         --convoy-ignore-docker-delete \
+        --convoy-create-on-docker-mount \
         --convoy-driver-opts vfs.path=$MNT_PT
 }
 
