@@ -47,7 +47,7 @@ common_vars() {
     STACK_UUID=${STACK_UUID:-$(curl -s http://rancher-metadata/2015-07-25/self/stack/uuid)}
     CONVOY_SOCK_IN_CON=/host/var/run/convoy-$STACK_NAME.sock
     CONVOY_SOCK_ON_HOST=/var/run/convoy-$STACK_NAME.sock
-    CONVOY_ROOT=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID
+    CONVOY_ROOT=${CONVOY_ROOT:=/var/lib/rancher/convoy/$STACK_NAME-$STACK_UUID}
 }
 
 volume_agent_glusterfs() {
