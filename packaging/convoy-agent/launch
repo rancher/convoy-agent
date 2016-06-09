@@ -168,7 +168,7 @@ volume_agent_nfs_internal() {
     echo "unix://$CONVOY_SOCK_ON_HOST" > /etc/docker/plugins/$STACK_NAME.spec
 
     echo "Mounting at: $MNT_PT"
-    rpcbind
+    nsenter -t $TARGET_PID -n rpcbind
     mkdir -p $MNT_PT
     echo "Mounting nfs. Command: mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_DIR $MNT_PT"
     mountpoint -q $MNT_PT || nsenter -t $TARGET_PID -n mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_DIR $MNT_PT
