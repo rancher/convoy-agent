@@ -148,7 +148,9 @@ volume_driver_longhorn_internal() {
 volume_agent_nfs() {
     wait_for_metadata
     common_vars
-    /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-agent-nfs-internal $PPID
+    sleep 1
+    PARENT=$(ps --no-header --pid $$ -o ppid)
+    /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-agent-nfs-internal $PARENT
 }
 
 
