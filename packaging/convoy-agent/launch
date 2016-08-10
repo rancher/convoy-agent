@@ -189,6 +189,49 @@ volume_agent_nfs_internal() {
         --convoy-driver-opts vfs.path=$MNT_PT
 }
 
+volume_agent_efs() {
+    wait_for_metadata
+    common_vars
+    sleep 1
+    PARENT=$(ps --no-header --pid $$ -o ppid)
+    /var/lib/rancher/convoy-agent/share-mnt $CONVOY_ROOT -- /launch  volume-agent-efs-internal $PARENT
+}
+
+volume_agent_efs_internal() {
+    TARGET_PID=${1?"Cannot run without target pid"}
+
+    common_vars
+    MNT_HOST=$(eval echo "$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).${MNT_HOST:-$(get_metadata efs_id)}.efs.${AWS_REGION:-$(get_metadata aws_region)}.amazonaws.com")
+    MNT_OPTS="nfsvers=4.1"
+    MNT_DIR=${MNT_DIR:-$(get_metadata mount_dir)}
+    if [ -n "$MNT_OPTS" ]; then
+        MNT_OPTS="-o $MNT_OPTS"
+    fi
+    MNT_PT=$CONVOY_ROOT/mnt
+
+    echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
+    echo "unix://$CONVOY_SOCK_ON_HOST" > /etc/docker/plugins/$STACK_NAME.spec
+
+    echo "Mounting at: $MNT_PT"
+    rpcbind
+    mkdir -p $MNT_PT
+    echo "Mounting nfs. Command: mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_DIR $MNT_PT"
+    mountpoint -q $MNT_PT || nsenter -t $TARGET_PID -n mount -t nfs $MNT_OPTS $MNT_HOST:$MNT_DIR $MNT_PT
+
+    exec convoy-agent \
+        --url $CATTLE_URL \
+        --access-key $CATTLE_ACCESS_KEY \
+        --secret-key $CATTLE_SECRET_KEY \
+        --storagepool-driver $STACK_NAME \
+        --socket $CONVOY_SOCK_IN_CON \
+        volume \
+        --convoy-root $CONVOY_ROOT \
+        --convoy-drivers vfs \
+        --convoy-ignore-docker-delete \
+        --convoy-create-on-docker-mount \
+        --convoy-driver-opts vfs.path=$MNT_PT
+}
+
 valid_func() {
     [ -n "$1" ] && declare -F | grep -q $cmd
 }
