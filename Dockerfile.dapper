@@ -1,0 +1,46 @@
+FROM ubuntu:16.04
+
+# Setup environment
+ENV PATH /go/bin:$PATH
+ENV DAPPER_DOCKER_SOCKET true
+ENV DAPPER_ENV TAG REPO
+ENV DAPPER_OUTPUT ./bin ./dist
+ENV DAPPER_RUN_ARGS --privileged
+ENV DAPPER_SOURCE /go/src/github.com/rancher/convoy-agent
+ENV TRASH_CACHE ${DAPPER_SOURCE}/.trash-cache
+WORKDIR ${DAPPER_SOURCE}
+
+# Install packages
+RUN sed -i "s/http:\/\/archive.ubuntu.com\/ubuntu\//mirror:\/\/mirrors.ubuntu.com\/mirrors.txt/g" /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y \
+        cmake \
+        curl \
+        git
+
+# Install Go 1.6
+RUN curl -o go.tar.gz https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz
+RUN echo 'e40c36ae71756198478624ed1bb4ce17597b3c19d243f3f0899bb5740d56212a  go.tar.gz' | sha256sum -c && \
+    tar xzf go.tar.gz -C /usr/local && \
+    rm go.tar.gz
+RUN mkdir -p /go
+ENV PATH $PATH:/usr/local/go/bin
+ENV GOPATH=/go
+
+# Go tools
+RUN go get github.com/rancher/trash
+RUN go get github.com/golang/lint/golint
+
+# Docker
+RUN curl -sL https://get.docker.com/builds/Linux/x86_64/docker-1.9.1 > /usr/bin/docker && \
+    chmod +x /usr/bin/docker
+
+# Convoy
+RUN curl -o convoy.tar.gz -sSL https://github.com/rancher/convoy/releases/download/v0.4.4-rc2/convoy.tar.gz && \
+	    tar xzf convoy.tar.gz -C /usr/local/ && \
+	    cp /usr/local/convoy/convoy /usr/bin/
+
+VOLUME /tmp
+ENV TMPDIR /tmp
+ENTRYPOINT ["./scripts/entry"]
+CMD ["build"]

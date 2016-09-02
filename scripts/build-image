@@ -18,7 +18,7 @@ done
 
 cd $(dirname $0)/..
 
-TARGET="dist/artifacts/convoy-agent.tar.xz"
+TARGET="dist/artifacts/convoy-agent.tar.gz"
 
 if [ "$LOCAL" != true ]; then
     rm -rf dist/artifacts
@@ -31,7 +31,7 @@ if [ "$LOCAL" != true ]; then
 fi
 
 echo "Uncompressing..."
-tar -xJvf ${TARGET} -C dist/artifacts/
+tar -xvf ${TARGET} -C dist/artifacts/
 
 ls dist
 echo done list

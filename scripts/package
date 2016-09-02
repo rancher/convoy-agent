@@ -11,5 +11,5 @@ mkdir -p dist/artifacts
 
 cd build
 echo "Packaging:"
-tar cvJf ../dist/artifacts/$PROJECT.tar.xz .
-echo Created dist/artifacts/$PROJECT.tar.xz
+tar czf ../dist/artifacts/$PROJECT.tar.gz .
+echo Created dist/artifacts/$PROJECT.tar.gz
