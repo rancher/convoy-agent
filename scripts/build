@@ -2,7 +2,11 @@
 
 set -e
 
+source $(dirname $0)/version
+
 cd $(dirname $0)/..
+
+echo Current building version is $VERSION
 
 . ./scripts/common_functions
 set_project_vars
@@ -20,4 +24,5 @@ fi
 
 rm -rf build
 mkdir -p build
-CGO_ENABLED=0 go build -o build/${PROJECT} -a -installsuffix cgo -ldflags "-extldflags -static -X main.GITCOMMIT=$GITCOMMIT"
+CGO_ENABLED=0 go build -o build/${PROJECT} -a -installsuffix cgo -ldflags \
+        "-extldflags -static -X main.VERSION=$VERSION"

@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	GITCOMMIT = "HEAD"
-	port      = 10241
+	VERSION = "0.10.0-dev"
+	port    = 10241
 )
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "convoy-agent"
-	app.Version = GITCOMMIT
+	app.Version = VERSION
 	app.Author = "Rancher Labs"
 	app.Usage = "An agent that acts as an interface between rancher storage and cattle server"
 
