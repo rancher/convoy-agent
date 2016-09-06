@@ -22,7 +22,7 @@ if [ ! -e ${PACKAGE} ]; then
     ln -s $(pwd) $PACKAGE
 fi
 
-rm -rf build
-mkdir -p build
-CGO_ENABLED=0 go build -o build/${PROJECT} -a -installsuffix cgo -ldflags \
+rm -rf bin
+mkdir -p bin
+CGO_ENABLED=0 go build -o bin/${PROJECT} -a -installsuffix cgo -ldflags \
         "-extldflags -static -X main.VERSION=$VERSION"
