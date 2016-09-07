@@ -1,0 +1,39 @@
+package: github.com/rancher/convoy-agent
+
+import:
+- package: github.com/Sirupsen/logrus
+  version: 26709e2714106fb8ad40b773b711ebce25b78914
+
+- package: github.com/codegangsta/cli
+  version: 6086d7927ec35315964d9fea46df6c04e6d697c1
+
+- package: github.com/gorilla/websocket
+  version: 1551221275a7bd42978745a376b2531f791d88f3
+
+- package: github.com/mitchellh/mapstructure
+  version: 281073eb9eb092240d33ef253c404f1cca550309
+
+- package: github.com/rancher/convoy/api
+  version: 690f170961f007b02bc48e0cbe98d7335085386e
+
+- package: github.com/rancher/convoy/client/flags
+  version: 690f170961f007b02bc48e0cbe98d7335085386e
+
+- package: github.com/rancher/go-machine-service/events
+  version: 5023ae491db0a92cde803c7a6f71d0aef514159b
+
+- package: github.com/rancher/go-machine-service/locks
+  version: 5023ae491db0a92cde803c7a6f71d0aef514159b
+
+- package: github.com/rancher/go-rancher-metadata/metadata
+  version: 593dcecf7122b25df7ad5d0d3d73fdbcc8bee3be
+
+- package: github.com/rancher/go-rancher/client
+  version: a1a60172da70a2d3f324da3b0c392b79f75fb91b
+
+- package: github.com/rancher/kubernetes-agent/healthcheck
+  version: ebc4233b0edaf878b9a891cf0350de6e85fe1777
+
+- package: gopkg.in/check.v1
+  version: 11d3bc7aa68e238947792f30573146a3231fc0f1
+

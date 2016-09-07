@@ -18,7 +18,7 @@ echo '1234567890' > tests/.root/UUID
 
 go test -p 1 -timeout 99999s ./...
 
-result=$(find . -name "*.go" | grep -v ./Godeps | xargs gofmt -s -l)
+result=$(find . -name "*.go" | grep -v ./vendor | xargs gofmt -s -l)
 if [ -n "$result" ]; then
     echo "${#result[@]} files failed gofmt check:"
 fi

@@ -1,6 +1,12 @@
 #!/bin/bash
 
+source $(dirname $0)/version
+
 cd $(dirname $0)/..
+
+if [ ! -x ./bin/convoy-agent ]; then
+    ./scripts/build
+fi
 
 . ./scripts/common_functions
 
@@ -9,7 +15,19 @@ set_project_vars
 rm -rf dist
 mkdir -p dist/artifacts
 
-cd build
+cd bin
 echo "Packaging:"
-tar cvJf ../dist/artifacts/$PROJECT.tar.xz .
-echo Created dist/artifacts/$PROJECT.tar.xz
+tar czf ../dist/artifacts/$PROJECT.tar.gz .
+echo Created dist/artifacts/$PROJECT.tar.gz
+
+cd ..
+mkdir -p dist/build/convoy-agent
+cp ./bin/convoy-agent dist/build/convoy-agent/
+cp packaging/convoy-agent/* dist/build/convoy-agent/
+
+TAG=${TAG:-${VERSION}}
+REPO=${REPO:=rancher}
+
+echo "Building Docker image ${REPO}/convoy-agent:${TAG}"
+docker build --rm -t ${REPO}/convoy-agent:${TAG} dist/build/convoy-agent
+echo "Finished building Docker image ${REPO}/convoy-agent:${TAG}"
