@@ -66,7 +66,7 @@ volume_agent_glusterfs_internal() {
     wait_for_metadata
     common_vars
     GLUSTER_STACK_NAME=$(get_metadata gluster_stack)
-    SERVICE_NAME=$(get_metadata gluster_service)
+    SERVERS=$(get_metadata servers)
     VOLUME_POOL=$(get_metadata volume_pool)
 
     echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
@@ -82,7 +82,7 @@ volume_agent_glusterfs_internal() {
         --convoy-root $CONVOY_ROOT \
         --convoy-drivers glusterfs \
         --convoy-driver-opts glusterfs.defaultvolumepool=$VOLUME_POOL \
-        --convoy-driver-opts glusterfs.servers=glusterfs
+        --convoy-driver-opts glusterfs.servers=$SERVERS
 }
 
 longhorn_common_vars() {
