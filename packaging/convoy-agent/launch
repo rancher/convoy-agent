@@ -203,11 +203,10 @@ volume_agent_efs_internal() {
 
     common_vars
     MNT_HOST=$(eval echo "$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).${MNT_HOST:-$(get_metadata efs_id)}.efs.${AWS_REGION:-$(get_metadata aws_region)}.amazonaws.com")
-    MNT_OPTS="nfsvers=4.1"
+    MNT_OPTS=${MNT_OPTS:-$(get_metadata mount_opts)}
+    MNT_OPTS=${MNT_OPTS:-nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2}
+    MNT_OPTS="-o $MNT_OPTS"
     MNT_DIR=${MNT_DIR:-$(get_metadata mount_dir)}
-    if [ -n "$MNT_OPTS" ]; then
-        MNT_OPTS="-o $MNT_OPTS"
-    fi
     MNT_PT=$CONVOY_ROOT/mnt
 
     echo "Registering convoy socket at $CONVOY_SOCK_ON_HOST"
